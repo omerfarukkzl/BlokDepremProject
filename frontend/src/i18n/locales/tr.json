@@ -1,0 +1,255 @@
+{
+  "common": {
+    "loading": "Yükleniyor...",
+    "error": "Hata",
+    "success": "Başarılı",
+    "warning": "Uyarı",
+    "info": "Bilgi",
+    "search": "Ara",
+    "filter": "Filtrele",
+    "refresh": "Yenile",
+    "save": "Kaydet",
+    "cancel": "İptal",
+    "delete": "Sil",
+    "edit": "Düzenle",
+    "add": "Ekle",
+    "view": "Görüntüle",
+    "close": "Kapat",
+    "submit": "Gönder",
+    "yes": "Evet",
+    "no": "Hayır",
+    "ok": "Tamam",
+    "back": "Geri",
+    "next": "Sonraki",
+    "previous": "Önceki",
+    "total": "Toplam",
+    "status": "Durum",
+    "date": "Tarih",
+    "time": "Saat",
+    "name": "Ad",
+    "email": "E-posta",
+    "phone": "Telefon",
+    "address": "Adres",
+    "location": "Konum",
+    "quantity": "Miktar",
+    "price": "Fiyat",
+    "description": "Açıklama",
+    "details": "Detaylar",
+    "actions": "İşlemler",
+    "settings": "Ayarlar",
+    "profile": "Profil",
+    "logout": "Çıkış Yap",
+    "login": "Giriş Yap",
+    "register": "Kayıt Ol"
+  },
+  "navigation": {
+    "home": "Anasayfa",
+    "needs": "İhtiyaçlar",
+    "tracking": "Takip",
+    "dashboard": "Dashboard",
+    "shipments": "Gönderiler",
+    "admin": "Yönetim",
+    "users": "Kullanıcılar",
+    "locations": "Konumlar",
+    "reports": "Raporlar"
+  },
+  "auth": {
+    "login": {
+      "title": "BlokDeprem Giriş",
+      "subtitle": "Cüzdanınızla güvenli şekilde giriş yapın",
+      "walletAddress": "Cüzdan Adresi",
+      "walletPlaceholder": "0x...",
+      "connectWallet": "Bağlan",
+      "connecting": "Bağlanıyor...",
+      "signMessage": "İmzala ve Giriş Yap",
+      "signing": "İmzalanıyor...",
+      "metamaskNotInstalled": "MetaMask kurulu değil. Lütfen devam etmek için MetaMask'i kurun.",
+      "installMetamask": "MetaMask'i İndir",
+      "noAccount": "Hesabınız yok mu?",
+      "register": "Kayıt olun",
+      "walletInfo": "Cüzdan Bilgileri",
+      "chainId": "Chain ID",
+      "balance": "Bakiye",
+      "connected": "Cüzdan başarıyla bağlandı!",
+      "loginError": "Giriş Hatası",
+      "signatureError": "Mesaj imzalanırken hata oluştu. Lütfen tekrar deneyin."
+    },
+    "register": {
+      "title": "BlokDeprem Kayıt",
+      "subtitle": "Yardım görevlisi hesabı oluşturun",
+      "name": "Ad Soyad",
+      "namePlaceholder": "Adınız ve soyadınız",
+      "email": "E-posta (Opsiyonel)",
+      "emailPlaceholder": "ornek@email.com",
+      "location": "Konum",
+      "selectLocation": "Bir konum seçin",
+      "terms": "Kayıt olarak BlokDeprem'in",
+      "termsOfService": "kullanım koşullarını",
+      "and": "ve",
+      "privacyPolicy": "gizlilik politikasını",
+      "haveAccount": "Zaten hesabınız var mı?",
+      "signIn": "Giriş yapın",
+      "registerError": "Kayıt Hatası",
+      "walletRequired": "Kayıt için cüzdan bağlantısı gereklidir"
+    }
+  },
+  "home": {
+    "hero": {
+      "title": {
+        "line1": "Deprem Yardımını",
+        "line2": "Takip Edin"
+      },
+      "subtitle": "Blockchain ve yapay zeka destekli deprem yardım takip sistemi. İhtiyaçları görün, yardımları takip edin, şeffaflığı sağlayın.",
+      "buttons": {
+        "viewNeeds": "İhtiyaçları Gör",
+        "trackShipment": "Kargo Takip"
+      }
+    },
+    "features": {
+      "title": "Her şey şeffaf ve güvenli",
+      "subtitle": "Özellikler",
+      "description": "Blockchain teknolojisi ve yapay zeka ile deprem yardım süreçlerini modernize edin.",
+      "items": {
+        "tracking": {
+          "title": "Şeffaf Takip",
+          "description": "Tüm yardım malzemeleri blockchain üzerinde takip edilir. Kimin ne gönderdiği ve nereye ulaştığı tamamen şeffaftır."
+        },
+        "needs": {
+          "title": "İhtiyaç Yönetimi",
+          "description": "Gerçek zamanlı ihtiyaç listeleri. En acil ihtiyaçları görün ve doğru yardımı doğru yere yönlendirin."
+        },
+        "shipmentTracking": {
+          "title": "Kargo Takibi",
+          "description": "Barkod ile kolay takip. Gönderinizin durumunu anlık olarak görün ve teslimat bilgilerini takip edin."
+        },
+        "ai": {
+          "title": "Yapay Zeka Desteği",
+          "description": "AI destekli önerilerle yardımları en etkili şekilde dağıtın. İhtiyaç analizi ve optimizasyon."
+        }
+      }
+    },
+    "stats": {
+      "title": "Her yardımın hesabı verilsin",
+      "subtitle": "Güvenilirlik",
+      "items": {
+        "realtime": {
+          "title": "Gerçek Zamanlı",
+          "description": "Tüm veriler anlık olarak güncellenir ve blockchain üzerine kaydedilir."
+        },
+        "secure": {
+          "title": "Güvenli",
+          "description": "Blockchain teknolojisi ile veriler değiştirilemez ve herkese açıktır."
+        },
+        "effective": {
+          "title": "Etkin",
+          "description": "AI destekli optimizasyon ile yardımları en etkili şekilde dağıtın."
+        },
+        "transparent": {
+          "title": "Şeffaf",
+          "description": "Herkes yardım süreçlerini görüntüleyebilir ve denetleyebilir."
+        }
+      }
+    },
+    "cta": {
+      "title": "Yardım sürecine katılın",
+      "subtitle": "Hemen kayıt olun ve deprem bölgesindeki yardımları takip etmeye başlayın.",
+      "buttons": {
+        "register": "Görevli Olarak Kayıt Ol",
+        "viewNeeds": "İhtiyaçları Görüntüle"
+      }
+    }
+  },
+  "needs": {
+    "title": "İhtiyaç Listesi",
+    "subtitle": "Deprem bölgesindeki güncel ihtiyaçları görüntüleyin",
+    "lastUpdate": "Son güncelleme",
+    "filters": {
+      "allUrgencies": "Tüm Aciliyetler",
+      "critical": "Kritik",
+      "high": "Yüksek",
+      "medium": "Orta",
+      "low": "Düşük",
+      "clearFilters": "Filtreleri Temizle"
+    },
+    "searchPlaceholder": "Konum ara...",
+    "noResults": {
+      "title": "İhtiyaç bulunamadı",
+      "description": "Arama kriterlerinize uygun ihtiyaç bulunamadı.",
+      "clearFilters": "Filtreleri Temizle"
+    },
+    "info": {
+      "title": "Gerçek zamanlı veriler",
+      "description": "Bu ihtiyaç listesi görevliler tarafından güncellenmektedir. Kritik ihtiyaçlar öncelikli olarak karşılanmaktadır."
+    },
+    "summary": {
+      "title": "Özet",
+      "activeLocations": "Aktif Konum",
+      "criticalNeeds": "Kritik İhtiyaç",
+      "pendingNeeds": "Beklenen İhtiyaç",
+      "overallFulfillment": "Genel Karşılanma"
+    },
+    "location": {
+      "fulfillment": "Karşılanma",
+      "needsList": "İhtiyaç Listesi:",
+      "critical": {
+        "title": "Kritik ihtiyaçlar mevcut",
+        "description": "Bu lokasyonda acil ihtiyaçları bulunmaktadır. Lütfen öncelik veriniz."
+      },
+      "lastUpdated": "Son güncelleme:"
+    }
+  },
+  "tracking": {
+    "title": "Kargo Takip",
+    "subtitle": "Barkod numaranız ile kargonuzun durumunu takip edin",
+    "barcode": "Kargo Barkodu",
+    "barcodePlaceholder": "Örn: BK-2024-001",
+    "track": "Takip Et",
+    "tracking": "Takip ediliyor...",
+    "notFound": "Bu barkoda ait kargo bulunamadı. Lütfen barkodu kontrol edip tekrar deneyin.",
+    "error": "Kargo takibi sırasında hata oluştu. Lütfen daha sonra tekrar deneyin.",
+    "shipmentInfo": {
+      "title": "Rota Bilgileri",
+      "origin": "Kalkış",
+      "destination": "Varış",
+      "timing": {
+        "title": "Zaman Bilgileri",
+        "created": "Oluşturulma",
+        "estimatedDelivery": "Tahmini Teslimat",
+        "actualDelivery": "Gerçek Teslimat"
+      },
+      "contents": "Gönderi İçeriği"
+    },
+    "timeline": {
+      "title": "Takip Geçmişi",
+      "subtitle": "Kargonuzun yolculuğu boyunca kaydedilen tüm durumlar",
+      "registered": "Kaydedildi",
+      "inTransit": "Yolda",
+      "delivered": "Teslim Edildi",
+      "cancelled": "İptal Edildi"
+    },
+    "empty": {
+      "title": "Takip etmek için barkod girin",
+      "description": "Kargonuzun durumunu takip etmek için yukarıdaki alana barkodunu girin."
+    }
+  },
+  "errors": {
+    "networkError": "Network hatası oluştu. Lütfen bağlantınızı kontrol edin.",
+    "unauthorized": "Bu işlemi gerçekleştirmek için yetkiniz yok.",
+    "invalidCredentials": "Geçersiz kimlik bilgileri sağlandı.",
+    "walletNotConnected": "Lütfen önce cüzdanınızı bağlayın.",
+    "invalidBarcode": "Geçersiz barkod formatı.",
+    "shipmentNotFound": "Kargo bulunamadı.",
+    "genericError": "Bir hata oluştu. Lütfen tekrar deneyin."
+  },
+  "success": {
+    "loginSuccess": "Giriş başarılı!",
+    "logoutSuccess": "Çıkış başarılı!",
+    "shipmentCreated": "Gönderi başarıyla oluşturuldu!",
+    "shipmentUpdated": "Gönderi başarıyla güncellendi!",
+    "needCreated": "İhtiyaç başarıyla oluşturuldu!",
+    "needUpdated": "İhtiyaç başarıyla güncellendi!",
+    "profileUpdated": "Profil başarıyla güncellendi!",
+    "dataRefreshed": "Veriler başarıyla yenilendi!",
+    "walletConnected": "Cüzdan başarıyla bağlandı!"
+  }
+}

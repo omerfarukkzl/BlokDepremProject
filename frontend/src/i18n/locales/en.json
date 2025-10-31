@@ -1,0 +1,255 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "warning": "Warning",
+    "info": "Information",
+    "search": "Search",
+    "filter": "Filter",
+    "refresh": "Refresh",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "add": "Add",
+    "view": "View",
+    "close": "Close",
+    "submit": "Submit",
+    "yes": "Yes",
+    "no": "No",
+    "ok": "OK",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "total": "Total",
+    "status": "Status",
+    "date": "Date",
+    "time": "Time",
+    "name": "Name",
+    "email": "Email",
+    "phone": "Phone",
+    "address": "Address",
+    "location": "Location",
+    "quantity": "Quantity",
+    "price": "Price",
+    "description": "Description",
+    "details": "Details",
+    "actions": "Actions",
+    "settings": "Settings",
+    "profile": "Profile",
+    "logout": "Logout",
+    "login": "Login",
+    "register": "Register"
+  },
+  "navigation": {
+    "home": "Home",
+    "needs": "Needs",
+    "tracking": "Tracking",
+    "dashboard": "Dashboard",
+    "shipments": "Shipments",
+    "admin": "Admin",
+    "users": "Users",
+    "locations": "Locations",
+    "reports": "Reports"
+  },
+  "auth": {
+    "login": {
+      "title": "BlokDeprem Login",
+      "subtitle": "Login securely with your wallet",
+      "walletAddress": "Wallet Address",
+      "walletPlaceholder": "0x...",
+      "connectWallet": "Connect Wallet",
+      "connecting": "Connecting...",
+      "signMessage": "Sign and Login",
+      "signing": "Signing...",
+      "metamaskNotInstalled": "MetaMask is not installed. Please install MetaMask to continue.",
+      "installMetamask": "Install MetaMask",
+      "noAccount": "Don't have an account?",
+      "register": "Register",
+      "walletInfo": "Wallet Information",
+      "chainId": "Chain ID",
+      "balance": "Balance",
+      "connected": "Wallet connected successfully!",
+      "loginError": "Login Error",
+      "signatureError": "Failed to sign message. Please try again."
+    },
+    "register": {
+      "title": "BlokDeprem Registration",
+      "subtitle": "Create an aid officer account",
+      "name": "Full Name",
+      "namePlaceholder": "Your full name",
+      "email": "Email (Optional)",
+      "emailPlaceholder": "example@email.com",
+      "location": "Location",
+      "selectLocation": "Select a location",
+      "terms": "By registering, you agree to the",
+      "termsOfService": "terms of service",
+      "and": "and",
+      "privacyPolicy": "privacy policy",
+      "haveAccount": "Already have an account?",
+      "signIn": "Sign in",
+      "registerError": "Registration Error",
+      "walletRequired": "Wallet connection is required for registration"
+    }
+  },
+  "home": {
+    "hero": {
+      "title": {
+        "line1": "Track Earthquake",
+        "line2": "Aid"
+      },
+      "subtitle": "Blockchain and AI-powered earthquake aid tracking system. Track aid needs, monitor shipments, ensure transparency.",
+      "buttons": {
+        "viewNeeds": "View Needs",
+        "trackShipment": "Track Shipment"
+      }
+    },
+    "features": {
+      "title": "Everything is transparent and secure",
+      "subtitle": "Features",
+      "description": "Modernize earthquake aid processes with blockchain and AI.",
+      "items": {
+        "tracking": {
+          "title": "Transparent Tracking",
+          "description": "All aid materials are tracked on blockchain. Who sent what and where it went is completely transparent."
+        },
+        "needs": {
+          "title": "Needs Management",
+          "description": "Real-time needs lists. See the most urgent needs and direct the right aid to the right place."
+        },
+        "shipmentTracking": {
+          "title": "Shipment Tracking",
+          "description": "Easy tracking with barcode. View shipment status instantly and track delivery information."
+        },
+        "ai": {
+          "title": "AI Support",
+          "description": "AI-powered recommendations to distribute aid most effectively. Needs analysis and optimization."
+        }
+      }
+    },
+    "stats": {
+      "title": "Every aid should be accounted for",
+      "subtitle": "Reliability",
+      "items": {
+        "realtime": {
+          "title": "Real-Time",
+          "description": "All data is updated in real-time and recorded on blockchain."
+        },
+        "secure": {
+          "title": "Secure",
+          "description": "Blockchain technology ensures data is immutable and transparent to everyone."
+        },
+        "effective": {
+          "title": "Efficient",
+          "description": "AI-powered optimization helps distribute aid most effectively."
+        },
+        "transparent": {
+          "title": "Transparent",
+          "description": "Everyone can view and monitor aid processes."
+        }
+      }
+    },
+    "cta": {
+      "title": "Join the aid process",
+      "subtitle": "Register now and start monitoring aid in the earthquake zone.",
+      "buttons": {
+        "register": "Register as Official",
+        "viewNeeds": "View Needs"
+      }
+    }
+  },
+  "needs": {
+    "title": "Needs List",
+    "subtitle": "View current needs in the earthquake zone",
+    "lastUpdate": "Last update",
+    "filters": {
+      "allUrgencies": "All Urgencies",
+      "critical": "Critical",
+      "high": "High",
+      "medium": "Medium",
+      "low": "Low",
+      "clearFilters": "Clear Filters"
+    },
+    "searchPlaceholder": "Search location...",
+    "noResults": {
+      "title": "No needs found",
+      "description": "No needs found matching your search criteria.",
+      "clearFilters": "Clear Filters"
+    },
+    "info": {
+      "title": "Real-time data",
+      "description": "This needs list is updated by officials. Critical needs are prioritized."
+    },
+    "summary": {
+      "title": "Summary",
+      "activeLocations": "Active Locations",
+      "criticalNeeds": "Critical Needs",
+      "pendingNeeds": "Pending Needs",
+      "overallFulfillment": "Overall Fulfillment"
+    },
+    "location": {
+      "fulfillment": "Fulfillment",
+      "needsList": "Needs List:",
+      "critical": {
+        "title": "Critical needs exist",
+        "description": "This location has critical needs. Please prioritize."
+      },
+      "lastUpdated": "Last updated:"
+    }
+  },
+  "tracking": {
+    "title": "Shipment Tracking",
+    "subtitle": "Track your shipment status with barcode number",
+    "barcode": "Shipment Barcode",
+    "barcodePlaceholder": "e.g., BK-2024-001",
+    "track": "Track",
+    "tracking": "Tracking...",
+    "notFound": "No shipment found with this barcode. Please check the barcode and try again.",
+    "error": "An error occurred while tracking shipment. Please try again later.",
+    "shipmentInfo": {
+      "title": "Route Information",
+      "origin": "Origin",
+      "destination": "Destination",
+      "timing": {
+        "title": "Timing Information",
+        "created": "Created",
+        "estimatedDelivery": "Estimated Delivery",
+        "actualDelivery": "Actual Delivery"
+      },
+      "contents": "Shipment Contents"
+    },
+    "timeline": {
+      "title": "Tracking History",
+      "subtitle": "All statuses recorded during shipment's journey",
+      "registered": "Registered",
+      "inTransit": "In Transit",
+      "delivered": "Delivered",
+      "cancelled": "Cancelled"
+    },
+    "empty": {
+      "title": "Enter barcode to track",
+      "description": "Enter your shipment barcode in the field above to track its status."
+    }
+  },
+  "errors": {
+    "networkError": "Network error occurred. Please check your connection.",
+    "unauthorized": "You are not authorized to perform this action.",
+    "invalidCredentials": "Invalid credentials provided.",
+    "walletNotConnected": "Please connect your wallet first.",
+    "invalidBarcode": "Invalid barcode format.",
+    "shipmentNotFound": "Shipment not found.",
+    "genericError": "An error occurred. Please try again."
+  },
+  "success": {
+    "loginSuccess": "Login successful!",
+    "logoutSuccess": "Logged out successfully!",
+    "shipmentCreated": "Shipment created successfully!",
+    "shipmentUpdated": "Shipment updated successfully!",
+    "needCreated": "Need created successfully!",
+    "needUpdated": "Need updated successfully!",
+    "profileUpdated": "Profile updated successfully!",
+    "dataRefreshed": "Data refreshed successfully!",
+    "walletConnected": "Wallet connected successfully!"
+  }
+}

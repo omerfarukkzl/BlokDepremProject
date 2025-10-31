@@ -1,0 +1,1 @@
+# BlokDeprem AI Module
