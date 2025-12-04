@@ -15,6 +15,9 @@ import RegisterPage from './pages/public/RegisterPage/RegisterPage';
 import NeedsPage from './pages/public/NeedsPage/NeedsPage';
 import TrackPage from './pages/public/TrackPage/TrackPage';
 
+// Protected Routes
+import ProtectedRoute from './components/auth/ProtectedRoute/ProtectedRoute';
+
 // Create a client
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -33,12 +36,42 @@ function AppRoutes() {
       <Route element={<Layout />}>
         {/* Home page route */}
         <Route path={ROUTES.HOME} element={<HomePage />} />
-        
+
         {/* Public routes */}
         <Route path={ROUTES.LOGIN} element={<LoginPage />} />
         <Route path={ROUTES.REGISTER} element={<RegisterPage />} />
         <Route path={ROUTES.NEEDS} element={<NeedsPage />} />
         <Route path={ROUTES.TRACK} element={<TrackPage />} />
+
+        {/* Official protected routes */}
+        <Route
+          path="/official/*"
+          element={
+            <ProtectedRoute requiredRole="official">
+              <div className="container mx-auto py-8">
+                <div className="text-center">
+                  <h1 className="text-3xl font-bold text-gray-900">Official Dashboard</h1>
+                  <p className="mt-2 text-gray-600">Official dashboard coming soon...</p>
+                </div>
+              </div>
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Admin protected routes */}
+        <Route
+          path="/admin/*"
+          element={
+            <ProtectedRoute requiredRole="admin">
+              <div className="container mx-auto py-8">
+                <div className="text-center">
+                  <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
+                  <p className="mt-2 text-gray-600">Admin dashboard coming soon...</p>
+                </div>
+              </div>
+            </ProtectedRoute>
+          }
+        />
 
         {/* Default redirect */}
         <Route path="*" element={<Navigate to={ROUTES.HOME} replace />} />

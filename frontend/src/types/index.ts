@@ -55,9 +55,9 @@ export interface Need {
   aidItemId: string;
   quantityNeeded: number;
   quantityFulfilled: number;
-  urgency: UrgencyLevel;
+  urgencyLevel: UrgencyLevel;
+  status: 'active' | 'fulfilled' | 'cancelled';
   description?: string;
-  isActive: boolean;
   createdAt: string;
   updatedAt: string;
   aidItem?: AidItem;

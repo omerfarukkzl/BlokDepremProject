@@ -21,92 +21,80 @@ import {
 } from '../../../components';
 import { Container } from '../../../components/layout';
 import { useNotification } from '../../../components';
-
-// Mock data - should come from API
-const mockNeeds = [
-  {
-    id: '1',
-    locationName: 'İstanbul - Kadıköy',
-    address: 'Kadıköy, İstanbul',
-    aidItems: [
-      { name: 'Su', quantity: 500, unit: 'litre', urgency: 'critical' as const },
-      { name: 'Gıda', quantity: 200, unit: 'kg', urgency: 'high' as const },
-      { name: 'İlaç', quantity: 100, unit: 'kutu', urgency: 'medium' as const },
-    ],
-    totalNeeds: 800,
-    fulfilledNeeds: 300,
-    lastUpdated: '2024-01-15T10:30:00Z',
-  },
-  {
-    id: '2',
-    locationName: 'Ankara - Çankaya',
-    address: 'Çankaya, Ankara',
-    aidItems: [
-      { name: 'Battaniye', quantity: 300, unit: 'adet', urgency: 'high' as const },
-      { name: 'Tent', quantity: 50, unit: 'adet', urgency: 'critical' as const },
-    ],
-    totalNeeds: 350,
-    fulfilledNeeds: 100,
-    lastUpdated: '2024-01-15T09:45:00Z',
-  },
-  {
-    id: '3',
-    locationName: 'İzmir - Konak',
-    address: 'Konak, İzmir',
-    aidItems: [
-      { name: 'Su', quantity: 1000, unit: 'litre', urgency: 'critical' as const },
-      { name: 'Gıda', quantity: 500, unit: 'kg', urgency: 'high' as const },
-      { name: 'Kıyafet', quantity: 400, unit: 'adet', urgency: 'medium' as const },
-    ],
-    totalNeeds: 1900,
-    fulfilledNeeds: 800,
-    lastUpdated: '2024-01-15T11:00:00Z',
-  },
-];
+import { needsService, type Need, type NeedsParams } from '../../../services';
+import { useQuery } from '@tanstack/react-query';
 
 const NeedsPage: React.FC = () => {
   const { showSuccess } = useNotification();
-  const [loading, setLoading] = useState(false);
-  const [needs, setNeeds] = useState(mockNeeds);
-  const [filteredNeeds, setFilteredNeeds] = useState(mockNeeds);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedUrgency, setSelectedUrgency] = useState<string>('all');
-  const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
 
-  // Filter logic
-  useEffect(() => {
-    let filtered = needs;
+  // Build API query parameters
+  const queryParams: NeedsParams = {
+    status: 'active',
+    sortBy: 'urgencyLevel',
+    sortOrder: 'desc',
+  };
 
-    // Search filter
-    if (searchTerm) {
-      filtered = filtered.filter(need =>
-        need.locationName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        need.address.toLowerCase().includes(searchTerm.toLowerCase())
-      );
+  if (selectedUrgency !== 'all') {
+    queryParams.urgencyLevel = selectedUrgency;
+  }
+
+  if (searchTerm) {
+    queryParams.search = searchTerm;
+  }
+
+  // Fetch needs from API
+  const {
+    data: needsResponse,
+    isLoading,
+    refetch,
+    error,
+  } = useQuery({
+    queryKey: ['needs', queryParams],
+    queryFn: () => needsService.getNeeds(queryParams),
+    refetchInterval: 30000, // Refresh every 30 seconds
+  });
+
+  const needs = needsResponse?.data || [];
+  const lastRefresh = new Date();
+
+  // Group needs by location for display
+  const groupedNeeds = needs.reduce((acc, need) => {
+    const locationKey = need.locationId;
+    if (!acc[locationKey]) {
+      acc[locationKey] = {
+        location: need.location,
+        needs: [],
+        totalNeeds: 0,
+        fulfilledNeeds: 0,
+        lastUpdated: need.createdAt,
+      };
     }
+    acc[locationKey].needs.push(need);
+    acc[locationKey].totalNeeds += need.quantityNeeded;
+    acc[locationKey].fulfilledNeeds += need.quantityFulfilled;
+    acc[locationKey].lastUpdated = new Date(acc[locationKey].lastUpdated) > new Date(need.createdAt)
+      ? acc[locationKey].lastUpdated
+      : need.createdAt;
+    return acc;
+  }, {} as Record<string, {
+    location: Need['location'];
+    needs: Need[];
+    totalNeeds: number;
+    fulfilledNeeds: number;
+    lastUpdated: string;
+  }>);
 
-    // Urgency filter
-    if (selectedUrgency !== 'all') {
-      filtered = filtered.filter(need =>
-        need.aidItems.some(item => item.urgency === selectedUrgency)
-      );
-    }
-
-    setFilteredNeeds(filtered);
-  }, [needs, searchTerm, selectedUrgency]);
+  const locationData = Object.values(groupedNeeds);
 
   // Refresh data
   const handleRefresh = async () => {
-    setLoading(true);
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      setLastRefresh(new Date());
+      await refetch();
       showSuccess('Veriler güncellendi', 'İhtiyaç listesi yenilendi.');
     } catch (error) {
       console.error('Error refreshing data:', error);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -157,10 +145,10 @@ const NeedsPage: React.FC = () => {
                 variant="outline"
                 size="sm"
                 onClick={handleRefresh}
-                disabled={loading}
+                disabled={isLoading}
                 leftIcon={<ArrowPathIcon className="h-4 w-4" />}
               >
-                {loading ? 'Yenileniyor...' : 'Yenile'}
+                {isLoading ? 'Yenileniyor...' : 'Yenile'}
               </Button>
             </div>
           </div>
@@ -233,11 +221,27 @@ const NeedsPage: React.FC = () => {
 
         {/* Results */}
         <div className="space-y-6">
-          {loading ? (
+          {isLoading ? (
             <div className="flex justify-center py-12">
               <LoadingSpinner size="lg" showLabel label="İhtiyaçlar yükleniyor..." />
             </div>
-          ) : filteredNeeds.length === 0 ? (
+          ) : error ? (
+            <Alert variant="error" showIcon>
+              <div className="mt-2">
+                <p className="text-sm text-red-800">
+                  İhtiyaçlar yüklenirken bir hata oluştu. Lütfen daha sonra tekrar deneyin.
+                </p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleRefresh}
+                  className="mt-3"
+                >
+                  Tekrar Dene
+                </Button>
+              </div>
+            </Alert>
+          ) : locationData.length === 0 ? (
             <EmptyState
               icon="search"
               title="İhtiyaç bulunamadı"
@@ -252,23 +256,23 @@ const NeedsPage: React.FC = () => {
               }}
             />
           ) : (
-            filteredNeeds.map((need) => (
-              <Card key={need.id} className="hover:shadow-lg transition-shadow">
+            locationData.map((locationData) => (
+              <Card key={locationData.location.id} className="hover:shadow-lg transition-shadow">
                 <CardHeader>
                   <div className="flex items-start justify-between">
                     <div className="flex items-center">
                       <MapPinIcon className="h-5 w-5 text-gray-400 mr-2" />
                       <div>
-                        <CardTitle className="text-lg">{need.locationName}</CardTitle>
-                        <CardDescription>{need.address}</CardDescription>
+                        <CardTitle className="text-lg">{locationData.location.name}</CardTitle>
+                        <CardDescription>{locationData.location.address}, {locationData.location.city}</CardDescription>
                       </div>
                     </div>
                     <div className="text-right">
                       <div className="text-sm text-gray-500">
-                        Karşılanma: {need.fulfilledNeeds}/{need.totalNeeds}
+                        Karşılanma: {locationData.fulfilledNeeds}/{locationData.totalNeeds}
                       </div>
                       <div className="text-sm font-medium text-gray-900">
-                        {Math.round((need.fulfilledNeeds / need.totalNeeds) * 100)}%
+                        {Math.round((locationData.fulfilledNeeds / locationData.totalNeeds) * 100)}%
                       </div>
                     </div>
                   </div>
@@ -277,8 +281,8 @@ const NeedsPage: React.FC = () => {
                   <div className="mt-4">
                     <div className="w-full bg-gray-200 rounded-full h-2">
                       <div
-                        className={`h-2 rounded-full transition-all ${getProgressBarColor((need.fulfilledNeeds / need.totalNeeds) * 100)}`}
-                        style={{ width: `${(need.fulfilledNeeds / need.totalNeeds) * 100}%` }}
+                        className={`h-2 rounded-full transition-all ${getProgressBarColor((locationData.fulfilledNeeds / locationData.totalNeeds) * 100)}`}
+                        style={{ width: `${(locationData.fulfilledNeeds / locationData.totalNeeds) * 100}%` }}
                       />
                     </div>
                   </div>
@@ -288,23 +292,23 @@ const NeedsPage: React.FC = () => {
                   <div className="space-y-3">
                     <h4 className="font-medium text-gray-900">İhtiyaç Listesi:</h4>
                     <div className="grid gap-3">
-                      {need.aidItems.map((item, index) => (
-                        <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                      {locationData.needs.map((need) => (
+                        <div key={need.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                           <div className="flex items-center space-x-3">
                             <Badge
                               variant="outline"
-                              className={getUrgencyColor(item.urgency)}
+                              className={getUrgencyColor(need.urgencyLevel)}
                             >
-                              {getUrgencyLabel(item.urgency)}
+                              {getUrgencyLabel(need.urgencyLevel)}
                             </Badge>
                             <div>
-                              <span className="font-medium text-gray-900">{item.name}</span>
+                              <span className="font-medium text-gray-900">{need.aidItem.name}</span>
                               <span className="text-gray-500 ml-2">
-                                {item.quantity} {item.unit}
+                                {need.quantityNeeded - need.quantityFulfilled}/{need.quantityNeeded} {need.aidItem.unit}
                               </span>
                             </div>
                           </div>
-                          {item.urgency === 'critical' && (
+                          {need.urgencyLevel === 'critical' && (
                             <ExclamationTriangleIcon className="h-5 w-5 text-red-500" />
                           )}
                         </div>
@@ -312,7 +316,7 @@ const NeedsPage: React.FC = () => {
                     </div>
 
                     {/* Critical Needs Alert */}
-                    {need.aidItems.some(item => item.urgency === 'critical') && (
+                    {locationData.needs.some(need => need.urgencyLevel === 'critical') && (
                       <Alert variant="warning" size="sm" className="mt-4">
                         <div className="flex">
                           <div className="ml-3">
@@ -331,7 +335,7 @@ const NeedsPage: React.FC = () => {
 
                     <div className="pt-4 border-t border-gray-200">
                       <p className="text-sm text-gray-500">
-                        Son güncelleme: {new Date(need.lastUpdated).toLocaleString('tr-TR')}
+                        Son güncelleme: {new Date(locationData.lastUpdated).toLocaleString('tr-TR')}
                       </p>
                     </div>
                   </div>
@@ -342,29 +346,29 @@ const NeedsPage: React.FC = () => {
         </div>
 
         {/* Stats Summary */}
-        {!loading && filteredNeeds.length > 0 && (
+        {!isLoading && locationData.length > 0 && (
           <Card className="mt-8">
             <CardContent className="p-6">
               <h3 className="text-lg font-medium text-gray-900 mb-4">Özet</h3>
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div className="text-center">
                   <div className="text-2xl font-bold text-primary-600">
-                    {filteredNeeds.length}
+                    {locationData.length}
                   </div>
                   <div className="text-sm text-gray-500">Aktif Lokasyon</div>
                 </div>
                 <div className="text-center">
                   <div className="text-2xl font-bold text-red-600">
-                    {filteredNeeds.reduce((acc, need) =>
-                      acc + need.aidItems.filter(item => item.urgency === 'critical').length, 0
+                    {locationData.reduce((acc, location) =>
+                      acc + location.needs.filter(need => need.urgencyLevel === 'critical').length, 0
                     )}
                   </div>
                   <div className="text-sm text-gray-500">Kritik İhtiyaç</div>
                 </div>
                 <div className="text-center">
                   <div className="text-2xl font-bold text-orange-600">
-                    {filteredNeeds.reduce((acc, need) =>
-                      acc + need.totalNeeds - need.fulfilledNeeds, 0
+                    {locationData.reduce((acc, location) =>
+                      acc + (location.totalNeeds - location.fulfilledNeeds), 0
                     )}
                   </div>
                   <div className="text-sm text-gray-500">Beklenen İhtiyaç</div>
@@ -372,9 +376,9 @@ const NeedsPage: React.FC = () => {
                 <div className="text-center">
                   <div className="text-2xl font-bold text-green-600">
                     {Math.round(
-                      filteredNeeds.reduce((acc, need) =>
-                        acc + (need.fulfilledNeeds / need.totalNeeds), 0
-                      ) / filteredNeeds.length * 100
+                      locationData.reduce((acc, location) =>
+                        acc + (location.fulfilledNeeds / location.totalNeeds), 0
+                      ) / locationData.length * 100
                     )}%
                   </div>
                   <div className="text-sm text-gray-500">Genel Karşılanma</div>

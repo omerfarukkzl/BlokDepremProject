@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { AuthState, User } from '../types';
+import authService from '../services/authService';
 
 interface LoginData {
   walletAddress: string;
@@ -30,28 +31,11 @@ export const useAuthStore = create<AuthStore>()(
       login: async (data: LoginData) => {
         set({ isLoading: true });
         try {
-          // TODO: Implement actual API call
-          // const response = await authService.login(data);
-
-          // Mock response for now
-          const mockResponse = {
-            user: {
-              id: '1',
-              walletAddress: data.walletAddress,
-              name: 'Demo User',
-              email: 'demo@example.com',
-              role: 'official' as const,
-              locationId: '1',
-              isActive: true,
-              createdAt: new Date().toISOString(),
-              updatedAt: new Date().toISOString(),
-            },
-            token: 'mock-jwt-token',
-          };
+          const response = await authService.login(data);
 
           set({
-            user: mockResponse.user,
-            token: mockResponse.token,
+            user: response.user,
+            token: response.token,
             isAuthenticated: true,
             isLoading: false,
           });
@@ -64,28 +48,11 @@ export const useAuthStore = create<AuthStore>()(
       register: async (data: LoginData & { name: string; email?: string; locationId: string }) => {
         set({ isLoading: true });
         try {
-          // TODO: Implement actual API call
-          // const response = await authService.register(data);
-
-          // Mock response for now
-          const mockResponse = {
-            user: {
-              id: '1',
-              walletAddress: data.walletAddress,
-              name: data.name,
-              email: data.email,
-              role: 'official' as const,
-              locationId: data.locationId,
-              isActive: true,
-              createdAt: new Date().toISOString(),
-              updatedAt: new Date().toISOString(),
-            },
-            token: 'mock-jwt-token',
-          };
+          const response = await authService.register(data);
 
           set({
-            user: mockResponse.user,
-            token: mockResponse.token,
+            user: response.user,
+            token: response.token,
             isAuthenticated: true,
             isLoading: false,
           });
