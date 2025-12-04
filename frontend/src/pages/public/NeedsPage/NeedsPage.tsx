@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   FunnelIcon,
   MagnifyingGlassIcon,
@@ -50,6 +50,7 @@ const NeedsPage: React.FC = () => {
     isLoading,
     refetch,
     error,
+    dataUpdatedAt,
   } = useQuery({
     queryKey: ['needs', queryParams],
     queryFn: () => needsService.getNeeds(queryParams),
@@ -57,7 +58,7 @@ const NeedsPage: React.FC = () => {
   });
 
   const needs = needsResponse?.data || [];
-  const lastRefresh = new Date();
+  const lastRefresh = dataUpdatedAt ? new Date(dataUpdatedAt) : null;
 
   // Group needs by location for display
   const groupedNeeds = needs.reduce((acc, need) => {
@@ -98,7 +99,7 @@ const NeedsPage: React.FC = () => {
     }
   };
 
-  const getUrgencyColor = (urgency: string) => {
+  const getUrgencyColor = (urgency: string | null) => {
     switch (urgency) {
       case 'critical': return 'text-red-600 bg-red-100';
       case 'high': return 'text-orange-600 bg-orange-100';
@@ -108,13 +109,13 @@ const NeedsPage: React.FC = () => {
     }
   };
 
-  const getUrgencyLabel = (urgency: string) => {
+  const getUrgencyLabel = (urgency: string | null) => {
     switch (urgency) {
       case 'critical': return 'Kritik';
       case 'high': return 'Yüksek';
       case 'medium': return 'Orta';
       case 'low': return 'Düşük';
-      default: return urgency;
+      default: return urgency || 'Belirtilmemiş';
     }
   };
 
@@ -138,9 +139,11 @@ const NeedsPage: React.FC = () => {
               </p>
             </div>
             <div className="flex items-center space-x-3">
-              <span className="text-sm text-gray-500">
-                Son güncelleme: {lastRefresh.toLocaleTimeString('tr-TR')}
-              </span>
+              {lastRefresh && (
+                <span className="text-sm text-gray-500">
+                  Son güncelleme: {lastRefresh.toLocaleTimeString('tr-TR')}
+                </span>
+              )}
               <Button
                 variant="outline"
                 size="sm"
@@ -317,7 +320,7 @@ const NeedsPage: React.FC = () => {
 
                     {/* Critical Needs Alert */}
                     {locationData.needs.some(need => need.urgencyLevel === 'critical') && (
-                      <Alert variant="warning" size="sm" className="mt-4">
+                      <Alert variant="warning" className="mt-4">
                         <div className="flex">
                           <div className="ml-3">
                             <h3 className="text-sm font-medium text-yellow-800">

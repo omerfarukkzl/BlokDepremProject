@@ -1,9 +1,9 @@
 import apiClient from './apiClient';
 import type { PaginatedResponse } from './apiClient';
-import { API_ENDPOINTS, PAGINATION } from '../constants';
+import { API_ENDPOINTS } from '../constants';
 
 export interface Location {
-  id: sackining;
+  id: string;
   name: string;
   address: string;
   city: string;
@@ -71,7 +71,7 @@ const adaptNeed = (raw: RawNeed): Need => ({
   },
   quantityNeeded: raw.needed_quantity,
   quantityFulfilled: raw.supplied_quantity,
-  urgencyLevel: raw.priority as any || null,
+  urgencyLevel: (raw.priority as 'critical' | 'high' | 'medium' | 'low' | null) || null,
   status: raw.supplied_quantity >= raw.needed_quantity ? 'fulfilled' : 'active',
   createdAt: raw.updated_at,
   updatedAt: raw.updated_at
@@ -108,22 +108,48 @@ class NeedsService {
     }
 
     const url = queryParams.toString()
-      ? `${API_ENDPOINTS.NEEDS}?${queryParams.toString()}`
-      : API_ENDPOINTS.NEEDS;
+      ? `${API_ENDPOINTS.PUBLIC.NEEDS}?${queryParams.toString()}`
+      : API_ENDPOINTS.PUBLIC.NEEDS;
 
     const response = await apiClient.get<PaginatedResponse<RawNeed>>(url);
 
-    if (response.success && response.data) {
-      // Adapt raw data to frontend format
-      const adaptedData = response.data.map(adaptNeed);
-      return {
-        success: true,
-        data: adaptedData,
-        pagination: response.pagination
-      };
+    // Backend returns PaginatedResponse directly: { success: true, data: [...], pagination: {...} }
+    // apiClient.get returns response.data from axios, which is the PaginatedResponse itself
+    // So at runtime, response IS the PaginatedResponse, not wrapped in ApiResponse
+    const paginatedData = response as unknown as PaginatedResponse<RawNeed>;
+
+    if (!paginatedData.success) {
+      throw new Error('Failed to fetch needs');
     }
 
-    throw new Error(response.error || 'Failed to fetch needs');
+    if (!paginatedData.data) {
+      console.error('Empty response data:', paginatedData);
+      throw new Error('No data received from server');
+    }
+    
+    // Ensure data is an array
+    if (!Array.isArray(paginatedData.data)) {
+      console.error('Invalid response structure - data is not an array:', {
+        response,
+        paginatedData,
+        dataType: typeof paginatedData.data,
+        isArray: Array.isArray(paginatedData.data)
+      });
+      throw new Error(`Invalid response format: expected array but got ${typeof paginatedData.data}`);
+    }
+    
+    // Adapt raw data to frontend format
+    const adaptedData = paginatedData.data.map(adaptNeed);
+    return {
+      success: true,
+      data: adaptedData,
+      pagination: paginatedData.pagination || {
+        page: 1,
+        limit: adaptedData.length,
+        total: adaptedData.length,
+        totalPages: 1
+      }
+    };
   }
 
   /**
