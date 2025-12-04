@@ -3,7 +3,7 @@ import type { PaginatedResponse } from './apiClient';
 import { API_ENDPOINTS, PAGINATION } from '../constants';
 
 export interface Location {
-  id: string;
+  id: sackining;
   name: string;
   address: string;
   city: string;

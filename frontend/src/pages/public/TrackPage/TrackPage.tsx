@@ -92,46 +92,61 @@ const TrackPage: React.FC = () => {
     setShipmentData(null);
 
     try {
-      // Call the real API
-      const response = await fetch(`http://localhost:3000/track/${barcode}`);
-
-      if (!response.ok) {
-        if (response.status === 404) {
-          setError('Bu barkoda ait kargo bulunamadı. Lütfen barkodu kontrol edip tekrar deneyin.');
-        } else {
-          setError('Kargo takibi sırasında hata oluştu. Lütfen daha sonra tekrar deneyin.');
-        }
-        return;
-      }
-
-      const data = await response.json();
+      // Use trackingService to get tracking history with proper API client integration
+      const trackingHistory = await trackingService.getTrackingHistory(barcode);
 
       // Transform the API response to match the frontend interface
       const transformedData = {
-        id: data.shipment.id.toString(),
-        barcode: data.shipment.barcode,
-        origin: `${data.shipment.sourceLocation?.name || 'Bilinmeyen'} ${data.shipment.sourceLocation?.address || ''}`.trim(),
-        destination: `${data.shipment.destinationLocation?.name || 'Bilinmeyen'} ${data.shipment.destinationLocation?.address || ''}`.trim(),
-        status: data.shipment.status.toLowerCase().replace('_', ''),
-        description: `Gönderi #${data.shipment.barcode}`,
-        items: [], // Will be populated if items API is called
-        trackingLogs: data.history.map((log: any) => ({
-          id: log.id.toString(),
-          status: log.status.toLowerCase().replace('_', ''),
-          location: `${log.status} - Kayıt`,
-          timestamp: log.timestamp,
-          notes: `Durum güncellendi: ${log.status}`
+        id: trackingHistory.shipment.id,
+        barcode: trackingHistory.shipment.barcode,
+        origin: `${trackingHistory.shipment.originLocation?.name || 'Bilinmeyen'} ${trackingHistory.shipment.originLocation?.address || ''}`.trim(),
+        destination: `${trackingHistory.shipment.destinationLocation?.name || 'Bilinmeyen'} ${trackingHistory.shipment.destinationLocation?.address || ''}`.trim(),
+        status: trackingHistory.shipment.status.toLowerCase(),
+        description: `Gönderi #${trackingHistory.shipment.barcode}`,
+        items: trackingHistory.shipment.items?.map((item) => ({
+          name: item.aidItem.name,
+          quantity: item.quantity,
+          unit: item.aidItem.unit,
+        })) || [],
+        trackingLogs: trackingHistory.events.map((event) => ({
+          id: event.id,
+          status: event.status.toLowerCase(),
+          location: event.location || `${event.status} - Kayıt`,
+          timestamp: event.timestamp,
+          notes: event.notes || `Durum güncellendi: ${event.status}`
         })),
-        createdAt: data.shipment.created_at,
-        estimatedDelivery: new Date(data.shipment.created_at).toISOString(), // Estimate 24h later
-        actualDelivery: data.shipment.status === 'Delivered' ? data.shipment.updated_at : null,
+        createdAt: trackingHistory.shipment.createdAt,
+        estimatedDelivery: trackingHistory.shipment.estimatedDeliveryDate || (() => {
+          // If no estimated delivery date, calculate 24 hours from creation
+          try {
+            const createdDate = new Date(trackingHistory.shipment.createdAt);
+            if (!isNaN(createdDate.getTime())) {
+              const estimated = new Date(createdDate);
+              estimated.setHours(estimated.getHours() + 24);
+              return estimated.toISOString();
+            }
+          } catch {
+            // Invalid date, fall through to fallback
+          }
+          // Fallback to current date + 24 hours
+          const fallback = new Date();
+          fallback.setHours(fallback.getHours() + 24);
+          return fallback.toISOString();
+        })(),
+        actualDelivery: trackingHistory.shipment.actualDeliveryDate || null,
       };
 
       setShipmentData(transformedData);
       showSuccess('Kargo bulundu', `${barcode} numaralı kargo detayları yüklendi.`);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error tracking shipment:', error);
-      setError('Kargo takibi sırasında hata oluştu. Lütfen daha sonra tekrar deneyin.');
+      
+      // Handle specific error cases
+      if (error.message?.includes('not found') || error.message?.includes('404')) {
+        setError('Bu barkoda ait kargo bulunamadı. Lütfen barkodu kontrol edip tekrar deneyin.');
+      } else {
+        setError(error.message || 'Kargo takibi sırasında hata oluştu. Lütfen daha sonra tekrar deneyin.');
+      }
     } finally {
       setLoading(false);
     }

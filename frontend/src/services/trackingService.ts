@@ -73,6 +73,73 @@ export interface TrackingHistory {
   }>;
 }
 
+// Backend API response format for /track/:barcode
+interface BackendTrackingLog {
+  id: number;
+  shipment_id: number;
+  status: string;
+  location?: string;
+  timestamp?: string;
+  created_at?: string;
+  notes?: string;
+  recorded_by?: number;
+  is_on_blockchain?: boolean;
+  blockchain_tx_hash?: string;
+}
+
+// Backend shipment response (snake_case from database)
+interface BackendShipment {
+  id: number;
+  barcode: string;
+  source_location_id?: number;
+  destination_location_id: number;
+  created_by_official_id: number;
+  status: string;
+  created_at: string | Date;
+  updated_at: string | Date;
+  sourceLocation?: {
+    id: number;
+    name: string;
+    address: string;
+    city: string;
+    region: string;
+  };
+  destinationLocation?: {
+    id: number;
+    name: string;
+    address: string;
+    city: string;
+    region: string;
+  };
+  official?: {
+    id: number;
+    name: string;
+    wallet_address: string;
+  };
+}
+
+interface BackendTrackingResponse {
+  shipment: BackendShipment;
+  history: BackendTrackingLog[];
+}
+
+// Helper function to safely convert date to ISO string
+const toISOString = (date: string | Date | null | undefined): string => {
+  if (!date) {
+    return new Date().toISOString();
+  }
+  
+  try {
+    const dateObj = typeof date === 'string' ? new Date(date) : date;
+    if (isNaN(dateObj.getTime())) {
+      return new Date().toISOString();
+    }
+    return dateObj.toISOString();
+  } catch {
+    return new Date().toISOString();
+  }
+};
+
 class TrackingService {
   /**
    * Track shipment by barcode
@@ -89,15 +156,107 @@ class TrackingService {
 
   /**
    * Get complete tracking history for a shipment
+   * Backend returns { shipment, history } from /track/:barcode
+   * Note: This endpoint returns data directly, not wrapped in { success, data }
    */
   async getTrackingHistory(barcode: string): Promise<TrackingHistory> {
-    const response = await apiClient.get<TrackingHistory>(`${API_ENDPOINTS.PUBLIC.TRACK(barcode)}/history`);
+    // Backend endpoint /track/:barcode returns { shipment, history } directly
+    const response = await apiClient.get<BackendTrackingResponse>(API_ENDPOINTS.PUBLIC.TRACK(barcode));
 
-    if (response.success && response.data) {
-      return response.data;
+    // Handle both wrapped and unwrapped responses
+    // The tracking endpoint returns data directly, but apiClient might wrap it
+    let data: BackendTrackingResponse;
+    
+    // Type guard: check if response is wrapped in ApiResponse format
+    const isWrapped = (r: unknown): r is { success: boolean; data?: BackendTrackingResponse; error?: string } => {
+      return typeof r === 'object' && r !== null && 'success' in r;
+    };
+    
+    if (isWrapped(response)) {
+      // Wrapped response format: { success: true, data: { shipment, history } }
+      if (!response.success || !response.data) {
+        throw new Error(response.error || 'Tracking history not found');
+      }
+      data = response.data;
+    } else {
+      // Unwrapped response format: { shipment, history } directly
+      // Check if it looks like the expected format
+      if (!response || typeof response !== 'object' || !('shipment' in response) || !('history' in response)) {
+        throw new Error('Invalid response format from tracking API');
+      }
+      data = response as BackendTrackingResponse;
     }
 
-    throw new Error(response.error || 'Tracking history not found');
+    // Transform backend shipment to frontend format
+    const backendShipment = data.shipment;
+    const transformedShipment: Shipment = {
+      id: backendShipment.id.toString(),
+      barcode: backendShipment.barcode,
+      originLocationId: backendShipment.source_location_id?.toString() || '',
+      originLocation: backendShipment.sourceLocation ? {
+        id: backendShipment.sourceLocation.id.toString(),
+        name: backendShipment.sourceLocation.name,
+        address: backendShipment.sourceLocation.address,
+        city: backendShipment.sourceLocation.city,
+        region: backendShipment.sourceLocation.region,
+      } : {
+        id: '',
+        name: 'Bilinmeyen',
+        address: '',
+        city: '',
+        region: '',
+      },
+      destinationLocationId: backendShipment.destination_location_id.toString(),
+      destinationLocation: backendShipment.destinationLocation ? {
+        id: backendShipment.destinationLocation.id.toString(),
+        name: backendShipment.destinationLocation.name,
+        address: backendShipment.destinationLocation.address,
+        city: backendShipment.destinationLocation.city,
+        region: backendShipment.destinationLocation.region,
+      } : {
+        id: '',
+        name: 'Bilinmeyen',
+        address: '',
+        city: '',
+        region: '',
+      },
+      status: (backendShipment.status?.toLowerCase() || 'registered') as 'registered' | 'in_transit' | 'delivered' | 'cancelled',
+      priority: 'medium', // Default priority, backend doesn't seem to have this field
+      estimatedDeliveryDate: undefined, // Backend doesn't provide this
+      actualDeliveryDate: backendShipment.status?.toLowerCase() === 'delivered' ? toISOString(backendShipment.updated_at) : undefined,
+      notes: undefined,
+      createdById: backendShipment.created_by_official_id.toString(),
+      createdBy: backendShipment.official ? {
+        id: backendShipment.official.id.toString(),
+        name: backendShipment.official.name,
+        walletAddress: backendShipment.official.wallet_address,
+      } : {
+        id: '',
+        name: 'Bilinmeyen',
+        walletAddress: '',
+      },
+      createdAt: toISOString(backendShipment.created_at),
+      updatedAt: toISOString(backendShipment.updated_at),
+      trackingEvents: [],
+      items: [], // Backend doesn't return items in tracking endpoint
+    };
+
+    // Adapt backend response to TrackingHistory interface
+    return {
+      shipment: transformedShipment,
+      events: data.history.map((log: BackendTrackingLog) => ({
+        id: log.id.toString(),
+        shipmentId: log.shipment_id?.toString() || transformedShipment.id,
+        status: (log.status?.toLowerCase() || 'registered') as 'registered' | 'in_transit' | 'delivered' | 'cancelled',
+        location: log.location,
+        timestamp: toISOString(log.timestamp || log.created_at),
+        notes: log.notes,
+        recordedBy: log.recorded_by?.toString() || '',
+        isOnBlockchain: log.is_on_blockchain || false,
+        blockchainTxHash: log.blockchain_tx_hash,
+      })),
+      blockchainTransactions: [], // Will be populated if blockchain data is available
+    };
   }
 
   /**
