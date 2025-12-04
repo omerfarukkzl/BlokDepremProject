@@ -17,7 +17,9 @@
       "Bash(xargs kill:*)",
       "Bash(tree:*)",
       "Bash(npm run start:dev:*)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "Bash(docker exec:*)",
+      "Bash(netstat:*)"
     ],
     "deny": [],
     "ask": []

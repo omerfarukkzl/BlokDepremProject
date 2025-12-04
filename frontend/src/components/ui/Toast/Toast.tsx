@@ -12,7 +12,7 @@ import { useUIStore } from '../../../stores';
 import type { NotificationState } from '../../../types';
 
 const toastVariants = cva(
-  'pointer-events-auto w-full max-w-sm overflow-hidden rounded-lg bg-white shadow-lg ring-1 ring-black ring-opacity-5',
+  'pointer-events-auto w-96 overflow-hidden rounded-lg bg-white shadow-lg ring-1 ring-black ring-opacity-5',
   {
     variants: {
       variant: {
@@ -92,12 +92,12 @@ const Toast: React.FC<ToastProps> = ({
           <div className="flex-shrink-0">
             {getIcon()}
           </div>
-          <div className="ml-3 w-0 flex-1 pt-0.5">
-            <p className="text-sm font-medium text-gray-900">
+          <div className="ml-3 flex-1 pt-0.5 min-w-0">
+            <p className="text-sm font-medium text-gray-900 break-words">
               {notification.title}
             </p>
             {notification.message && (
-              <p className="mt-1 text-sm text-gray-500">
+              <p className="mt-1 text-sm text-gray-500 break-words">
                 {notification.message}
               </p>
             )}
@@ -137,10 +137,10 @@ const ToastContainer: React.FC<ToastContainerProps> = ({
   const { notifications } = useUIStore();
 
   const positionClasses = {
-    'top-right': 'fixed top-0 right-0 z-50 p-4 space-y-4',
-    'top-left': 'fixed top-0 left-0 z-50 p-4 space-y-4',
-    'bottom-right': 'fixed bottom-0 right-0 z-50 p-4 space-y-4',
-    'bottom-left': 'fixed bottom-0 left-0 z-50 p-4 space-y-4',
+    'top-right': 'fixed top-0 right-1 z-50 p-2 space-y-2',
+    'top-left': 'fixed top-0 left-1 z-50 p-2 space-y-2',
+    'bottom-right': 'fixed bottom-0 right-1 z-50 p-2 space-y-2',
+    'bottom-left': 'fixed bottom-0 left-1 z-50 p-2 space-y-2',
   };
 
   return (

@@ -24,87 +24,9 @@ import {
 } from '../../../components';
 import { Container } from '../../../components/layout';
 import { useNotification } from '../../../components';
+import trackingService from '../../../services/trackingService';
+import { cn } from '../../../utils/cn';
 
-// Mock data - should come from API
-const mockShipmentData = {
-  'BK-2024-001': {
-    id: 'BK-2024-001',
-    barcode: 'BK-2024-001',
-    origin: 'İstanbul - Kadıköy',
-    destination: 'Hatay - Antakya',
-    status: 'delivered' as const,
-    description: 'Acil tıbbi malzemeler',
-    items: [
-      { name: 'İlaç', quantity: 100, unit: 'kutu' },
-      { name: 'Tıbbi Malzeme', quantity: 50, unit: 'kutu' },
-      { name: 'Sargı Malzemesi', quantity: 200, unit: 'adet' },
-    ],
-    trackingLogs: [
-      {
-        id: '1',
-        status: 'registered' as const,
-        location: 'İstanbul - Kadıköy',
-        timestamp: '2024-01-14T10:00:00Z',
-        notes: 'Gönderi kaydedildi'
-      },
-      {
-        id: '2',
-        status: 'in_transit' as const,
-        location: 'Ankara',
-        timestamp: '2024-01-14T16:30:00Z',
-        notes: 'Ankara distribution merkezine ulaştı'
-      },
-      {
-        id: '3',
-        status: 'in_transit' as const,
-        location: 'Adana',
-        timestamp: '2024-01-15T08:15:00Z',
-        notes: 'Adana distribution merkezine ulaştı'
-      },
-      {
-        id: '4',
-        status: 'delivered' as const,
-        location: 'Hatay - Antakya',
-        timestamp: '2024-01-15T14:45:00Z',
-        notes: 'Hedef noktaya teslim edildi'
-      }
-    ],
-    createdAt: '2024-01-14T10:00:00Z',
-    estimatedDelivery: '2024-01-15T18:00:00Z',
-    actualDelivery: '2024-01-15T14:45:00Z',
-  },
-  'BK-2024-002': {
-    id: 'BK-2024-002',
-    barcode: 'BK-2024-002',
-    origin: 'Ankara - Çankaya',
-    destination: 'Kahramanmaraş',
-    status: 'in_transit' as const,
-    description: 'Su ve gıda malzemeleri',
-    items: [
-      { name: 'Su', quantity: 1000, unit: 'litre' },
-      { name: 'Gıda Kolisi', quantity: 50, unit: 'koli' },
-    ],
-    trackingLogs: [
-      {
-        id: '1',
-        status: 'registered' as const,
-        location: 'Ankara - Çankaya',
-        timestamp: '2024-01-15T09:00:00Z',
-        notes: 'Gönderi kaydedildi'
-      },
-      {
-        id: '2',
-        status: 'in_transit' as const,
-        location: 'Kırıkkale',
-        timestamp: '2024-01-15T13:20:00Z',
-        notes: 'Kırıkkale distribution merkezine ulaştı'
-      }
-    ],
-    createdAt: '2024-01-15T09:00:00Z',
-    estimatedDelivery: '2024-01-16T20:00:00Z',
-    actualDelivery: null,
-  }
-};
 
 const TrackPage: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -158,22 +80,55 @@ const TrackPage: React.FC = () => {
       return;
     }
 
+    // Validate barcode format
+    const validation = trackingService.validateBarcode(barcode);
+    if (!validation.isValid) {
+      setError(validation.error || 'Geçersiz barkod formatı');
+      return;
+    }
+
     setLoading(true);
     setError(null);
     setShipmentData(null);
 
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Call the real API
+      const response = await fetch(`http://localhost:3000/track/${barcode}`);
 
-      const data = mockShipmentData[barcode as keyof typeof mockShipmentData];
-
-      if (data) {
-        setShipmentData(data);
-        showSuccess('Kargo bulundu', `${barcode} numaralı kargo detayları yüklendi.`);
-      } else {
-        setError('Bu barkoda ait kargo bulunamadı. Lütfen barkodu kontrol edip tekrar deneyin.');
+      if (!response.ok) {
+        if (response.status === 404) {
+          setError('Bu barkoda ait kargo bulunamadı. Lütfen barkodu kontrol edip tekrar deneyin.');
+        } else {
+          setError('Kargo takibi sırasında hata oluştu. Lütfen daha sonra tekrar deneyin.');
+        }
+        return;
       }
+
+      const data = await response.json();
+
+      // Transform the API response to match the frontend interface
+      const transformedData = {
+        id: data.shipment.id.toString(),
+        barcode: data.shipment.barcode,
+        origin: `${data.shipment.sourceLocation?.name || 'Bilinmeyen'} ${data.shipment.sourceLocation?.address || ''}`.trim(),
+        destination: `${data.shipment.destinationLocation?.name || 'Bilinmeyen'} ${data.shipment.destinationLocation?.address || ''}`.trim(),
+        status: data.shipment.status.toLowerCase().replace('_', ''),
+        description: `Gönderi #${data.shipment.barcode}`,
+        items: [], // Will be populated if items API is called
+        trackingLogs: data.history.map((log: any) => ({
+          id: log.id.toString(),
+          status: log.status.toLowerCase().replace('_', ''),
+          location: `${log.status} - Kayıt`,
+          timestamp: log.timestamp,
+          notes: `Durum güncellendi: ${log.status}`
+        })),
+        createdAt: data.shipment.created_at,
+        estimatedDelivery: new Date(data.shipment.created_at).toISOString(), // Estimate 24h later
+        actualDelivery: data.shipment.status === 'Delivered' ? data.shipment.updated_at : null,
+      };
+
+      setShipmentData(transformedData);
+      showSuccess('Kargo bulundu', `${barcode} numaralı kargo detayları yüklendi.`);
     } catch (error) {
       console.error('Error tracking shipment:', error);
       setError('Kargo takibi sırasında hata oluştu. Lütfen daha sonra tekrar deneyin.');
