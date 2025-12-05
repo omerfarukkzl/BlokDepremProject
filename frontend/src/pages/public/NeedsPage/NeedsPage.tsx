@@ -168,7 +168,7 @@ const NeedsPage: React.FC = () => {
                     <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" />
                   </div>
                   <Input
-                    placeholder="Lokasyon ara..."
+                    placeholder="Lokasyon veya ihtiyaç ara..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="pl-10"
