@@ -8,6 +8,7 @@ export const API_ENDPOINTS = {
     REGISTER: '/auth/register',
     REFRESH: '/auth/refresh',
     LOGOUT: '/auth/logout',
+    VERIFY: '/auth/verify',
   },
 
   // Public endpoints
