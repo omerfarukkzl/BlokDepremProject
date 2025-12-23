@@ -11,7 +11,7 @@ export class TrackingService {
     private readonly shipmentRepository: Repository<Shipment>,
     @InjectRepository(TrackingLog)
     private readonly trackingLogRepository: Repository<TrackingLog>,
-  ) {}
+  ) { }
 
   async trackByBarcode(barcode: string): Promise<{ shipment: Shipment; history: TrackingLog[] }> {
     const shipment = await this.shipmentRepository.findOne({
@@ -23,7 +23,10 @@ export class TrackingService {
       throw new NotFoundException(`Shipment with barcode ${barcode} not found`);
     }
 
-    const history = await this.trackingLogRepository.find({ where: { shipment_id: shipment.id } });
+    const history = await this.trackingLogRepository.find({
+      where: { shipment_id: shipment.id },
+      order: { timestamp: 'DESC' },
+    });
 
     return { shipment, history };
   }

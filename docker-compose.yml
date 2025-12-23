@@ -14,5 +14,16 @@ services:
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
       - postgres_data:/var/lib/postgresql/data
 
+  ai-service:
+    build:
+      context: ./ai
+      dockerfile: Dockerfile
+    container_name: blokdeprem-ai
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./ai:/app
+
+
 volumes:
   postgres_data:

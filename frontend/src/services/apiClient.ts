@@ -76,7 +76,11 @@ class ApiClient {
         console.error('[API Response Error]', error);
 
         // Handle 401 Unauthorized - token refresh
-        if (error.response?.status === 401 && !originalRequest._retry) {
+        // Skip token refresh for auth endpoints (login, register don't have tokens yet)
+        const isAuthEndpoint = originalRequest.url?.includes('/auth/login') ||
+          originalRequest.url?.includes('/auth/register');
+
+        if (error.response?.status === 401 && !originalRequest._retry && !isAuthEndpoint) {
           originalRequest._retry = true;
 
           try {

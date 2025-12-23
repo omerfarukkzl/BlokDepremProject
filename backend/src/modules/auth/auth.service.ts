@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { JwtService } from '@nestjs/jwt';
 import { ethers } from 'ethers';
-import { Official } from '../../entities/official.entity';
+import { Official, OfficialRole } from '../../entities/official.entity';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 
@@ -53,7 +53,7 @@ export class AuthService {
       id: official.id.toString(),
       walletAddress: official.wallet_address,
       name: official.name || '',
-      role: 'official',
+      role: official.role || 'official',
       locationId: official.location_id?.toString(),
       isActive: true,
       createdAt: official.created_at?.toISOString() || new Date().toISOString(),
@@ -86,8 +86,12 @@ export class AuthService {
     });
     const savedOfficial = await this.officialRepository.save(official);
 
-    // Generate JWT token
-    const payload = { sub: savedOfficial.id, walletAddress: savedOfficial.wallet_address };
+    // Generate JWT token with role claim
+    const payload = {
+      sub: savedOfficial.id,
+      walletAddress: savedOfficial.wallet_address,
+      role: savedOfficial.role || OfficialRole.OFFICIAL,
+    };
     const token = this.jwtService.sign(payload);
 
     return {
@@ -113,8 +117,12 @@ export class AuthService {
       throw new UnauthorizedException('Wallet not registered. Please register first.');
     }
 
-    // Generate JWT token
-    const payload = { sub: official.id, walletAddress: official.wallet_address };
+    // Generate JWT token with role claim
+    const payload = {
+      sub: official.id,
+      walletAddress: official.wallet_address,
+      role: official.role || OfficialRole.OFFICIAL,
+    };
     const token = this.jwtService.sign(payload);
 
     return {
@@ -130,7 +138,11 @@ export class AuthService {
       throw new UnauthorizedException('User not found');
     }
 
-    const payload = { sub: official.id, walletAddress: official.wallet_address };
+    const payload = {
+      sub: official.id,
+      walletAddress: official.wallet_address,
+      role: official.role || OfficialRole.OFFICIAL,
+    };
     const token = this.jwtService.sign(payload);
 
     return { token };

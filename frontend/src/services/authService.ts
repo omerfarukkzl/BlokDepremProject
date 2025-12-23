@@ -63,7 +63,7 @@ class AuthService {
       message: data.message,
       name: data.name,
       email: data.email,
-      location_id: data.locationId,
+      location_id: parseInt(data.locationId, 10),  // Backend expects number
     };
 
     const response = await apiClient.post<AuthResponse>(API_ENDPOINTS.AUTH.REGISTER, backendData);

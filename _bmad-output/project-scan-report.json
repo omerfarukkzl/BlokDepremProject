@@ -1,0 +1,123 @@
+{
+    "workflow_version": "1.2.0",
+    "timestamps": {
+        "started": "2025-12-21T15:14:35+03:00",
+        "last_updated": "2025-12-21T15:17:00+03:00",
+        "completed": "2025-12-21T15:17:00+03:00"
+    },
+    "mode": "initial_scan",
+    "scan_level": "quick",
+    "project_root": "/Users/omerfarukkizil/development/BlokDepremProject",
+    "output_folder": "/Users/omerfarukkizil/development/BlokDepremProject/_bmad-output",
+    "completed_steps": [
+        {
+            "step": "step_1",
+            "status": "completed",
+            "timestamp": "2025-12-21T15:15:48+03:00",
+            "summary": "Classified as multi-part with 4 parts: backend, frontend, blockchain, ai"
+        },
+        {
+            "step": "step_2",
+            "status": "completed",
+            "timestamp": "2025-12-21T15:16:00+03:00",
+            "summary": "Found 11 existing docs including BACKEND_DOCUMENTATION.md and FRONTEND_DOCUMENTATION.md"
+        },
+        {
+            "step": "step_3",
+            "status": "completed",
+            "timestamp": "2025-12-21T15:16:00+03:00",
+            "summary": "Tech stack analyzed: NestJS backend, React/Vite frontend, Solidity blockchain, Python AI"
+        },
+        {
+            "step": "step_4",
+            "status": "completed",
+            "timestamp": "2025-12-21T15:16:30+03:00",
+            "summary": "Quick scan completed - pattern-based analysis"
+        },
+        {
+            "step": "step_5",
+            "status": "completed",
+            "timestamp": "2025-12-21T15:16:40+03:00",
+            "summary": "Source tree documented"
+        },
+        {
+            "step": "step_6",
+            "status": "completed",
+            "timestamp": "2025-12-21T15:16:45+03:00",
+            "summary": "Dev/deployment guides written"
+        },
+        {
+            "step": "step_7",
+            "status": "completed",
+            "timestamp": "2025-12-21T15:16:50+03:00",
+            "summary": "Integration architecture documented with 4 integration points"
+        },
+        {
+            "step": "step_8",
+            "status": "skipped",
+            "timestamp": "2025-12-21T15:16:50+03:00",
+            "summary": "Detailed architecture skipped for quick scan - marked for generation"
+        },
+        {
+            "step": "step_9",
+            "status": "completed",
+            "timestamp": "2025-12-21T15:16:55+03:00",
+            "summary": "All supporting docs written"
+        },
+        {
+            "step": "step_10",
+            "status": "completed",
+            "timestamp": "2025-12-21T15:17:00+03:00",
+            "summary": "Master index generated"
+        },
+        {
+            "step": "step_11",
+            "status": "completed",
+            "timestamp": "2025-12-21T15:17:00+03:00",
+            "summary": "Validation complete"
+        },
+        {
+            "step": "step_12",
+            "status": "completed",
+            "timestamp": "2025-12-21T15:17:00+03:00",
+            "summary": "Workflow complete"
+        }
+    ],
+    "current_step": "completed",
+    "project_types": [
+        {
+            "part_id": "backend",
+            "project_type_id": "backend",
+            "display_name": "NestJS Backend API"
+        },
+        {
+            "part_id": "frontend",
+            "project_type_id": "web",
+            "display_name": "React/Vite Web Application"
+        },
+        {
+            "part_id": "blockchain",
+            "project_type_id": "library",
+            "display_name": "Solidity Smart Contract"
+        },
+        {
+            "part_id": "ai",
+            "project_type_id": "library",
+            "display_name": "Python AI Module"
+        }
+    ],
+    "findings": {
+        "project_classification": "Multi-part monorepo with 4 parts",
+        "existing_docs": "11 markdown files including comprehensive backend and frontend documentation",
+        "technology_stack": "NestJS + TypeORM, React + Vite + TailwindCSS + Zustand, Solidity, Python"
+    },
+    "outputs_generated": [
+        "project-scan-report.json",
+        "project-overview.md",
+        "source-tree-analysis.md",
+        "integration-architecture.md",
+        "development-guide.md",
+        "index.md"
+    ],
+    "resume_instructions": "Workflow completed successfully"
+}

@@ -26,6 +26,7 @@ export const API_ENDPOINTS = {
   OFFICIALS: '/officials',
   AI: {
     DISTRIBUTION_SUGGESTIONS: '/ai/distribution-suggestions',
+    PREDICT: '/ai/predict',
   },
 } as const;
 
@@ -51,6 +52,7 @@ export const ROUTES = {
     SHIPMENTS: '/official/shipments',
     NEEDS: '/official/needs',
     PROFILE: '/official/profile',
+    PREDICTIONS: '/official/predictions',
   },
 
   // Admin routes

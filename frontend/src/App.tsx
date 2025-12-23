@@ -14,6 +14,7 @@ import LoginPage from './pages/public/LoginPage/LoginPage';
 import RegisterPage from './pages/public/RegisterPage/RegisterPage';
 import NeedsPage from './pages/public/NeedsPage/NeedsPage';
 import TrackPage from './pages/public/TrackPage/TrackPage';
+import PredictionsPage from './pages/official/PredictionsPage/PredictionsPage';
 
 // Protected Routes
 import ProtectedRoute from './components/auth/ProtectedRoute/ProtectedRoute';
@@ -48,12 +49,10 @@ function AppRoutes() {
           path="/official/*"
           element={
             <ProtectedRoute requiredRole="official">
-              <div className="container mx-auto py-8">
-                <div className="text-center">
-                  <h1 className="text-3xl font-bold text-gray-900">Official Dashboard</h1>
-                  <p className="mt-2 text-gray-600">Official dashboard coming soon...</p>
-                </div>
-              </div>
+              <Routes>
+                <Route path="predictions" element={<PredictionsPage />} />
+                <Route path="*" element={<Navigate to="predictions" replace />} />
+              </Routes>
             </ProtectedRoute>
           }
         />

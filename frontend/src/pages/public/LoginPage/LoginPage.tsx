@@ -3,11 +3,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import {
-  ArrowPathIcon,
-  WalletIcon,
-  ExclamationTriangleIcon,
-} from '@heroicons/react/24/outline';
+import { WalletIcon } from '@heroicons/react/24/outline';
 import {
   Button,
   Card,
@@ -22,6 +18,7 @@ import { useAuthStore } from '../../../stores';
 import { useNotification } from '../../../components';
 import { ROUTES } from '../../../constants';
 import walletService from '../../../services/walletService';
+import type { WalletInfo } from '../../../services/walletService';
 
 // Form validation schema
 const loginSchema = z.object({
@@ -37,14 +34,14 @@ type LoginFormData = z.infer<typeof loginSchema>;
 const LoginPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { login, isLoading } = useAuthStore();
+  const { login } = useAuthStore();
   const { showError, showSuccess } = useNotification();
 
   const [walletConnecting, setWalletConnecting] = useState(false);
   const [signingMessage, setSigningMessage] = useState(false);
-  const [walletInfo, setWalletInfo] = useState<any>(null);
+  const [walletInfo, setWalletInfo] = useState<WalletInfo | null>(null);
 
-  const from = (location.state as any)?.from?.pathname || ROUTES.HOME;
+  const from = (location.state as { from?: { pathname: string } } | null)?.from?.pathname || ROUTES.HOME;
 
   const {
     register,

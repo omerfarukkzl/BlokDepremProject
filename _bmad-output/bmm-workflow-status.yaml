@@ -1,0 +1,101 @@
+# Workflow Status - BMad Method Brownfield
+# This tracks progress through BMM methodology Analysis, Planning, and Solutioning phases.
+# Implementation phase is tracked separately in sprint-status.yaml
+
+# STATUS DEFINITIONS:
+# ==================
+# Initial Status (before completion):
+#   - required: Must be completed to progress
+#   - optional: Can be completed but not required
+#   - recommended: Strongly suggested but not required
+#   - conditional: Required only if certain conditions met (e.g., if_has_ui)
+#
+# Completion Status:
+#   - {file-path}: File created/found (e.g., "docs/product-brief.md")
+#   - skipped: Optional/conditional workflow that was skipped
+
+generated: "2025-12-21T15:09:02+03:00"
+project: "BlokDepremProject"
+project_type: "brownfield"
+selected_track: "bmad-method"
+field_type: "brownfield"
+workflow_path: "method-brownfield.yaml"
+
+workflow_status:
+  # Prerequisite - Document existing codebase
+  prerequisite:
+    document-project:
+      status: "_bmad-output/index.md"
+      agent: analyst
+      command: document-project
+      purpose: "Understand existing codebase before planning"
+      completed_at: "2025-12-21T15:16:00+03:00"
+
+  # Phase 0: Discovery (Optional)
+  phase-0-discovery:
+    brainstorm-project:
+      status: "_bmad-output/analysis/brainstorming-session-2025-12-21.md"
+      agent: analyst
+      command: brainstorm-project
+      note: "User-selected during workflow-init"
+      completed_at: "2025-12-21T18:07:00+03:00"
+
+    research:
+      status: skipped
+      agent: analyst
+      command: research
+
+  # Phase 1: Planning
+  phase-1-planning:
+    prd:
+      status: required
+      agent: pm
+      command: prd
+      output: "PRD focused on new features/changes"
+
+    create-ux-design:
+      status: conditional
+      condition: if_has_ui
+      agent: ux-designer
+      command: create-ux-design
+
+  # Phase 2: Solutioning
+  phase-2-solutioning:
+    create-architecture:
+      status: "_bmad-output/architecture.md"
+      agent: architect
+      command: create-architecture
+      output: "Integration architecture - solution design for THIS project"
+      note: "HIGHLY RECOMMENDED: Distills massive brownfield context into focused solution design"
+      completed_at: "2025-12-22T02:52:00+03:00"
+
+    create-epics-and-stories:
+      status: required
+      agent: pm
+      command: create-epics-and-stories
+      note: "Break down PRD into implementable epics and stories"
+
+    test-design:
+      status: recommended
+      agent: tea
+      command: test-design
+      output: "System-level testability review"
+
+    validate-architecture:
+      status: optional
+      agent: architect
+      command: validate-architecture
+
+    implementation-readiness:
+      status: required
+      agent: architect
+      command: implementation-readiness
+      note: "Validates PRD + Architecture + Epics + UX (optional)"
+
+  # Phase 3: Implementation
+  phase-3-implementation:
+    sprint-planning:
+      status: required
+      agent: sm
+      command: sprint-planning
+      note: "Creates sprint plan with stories"
