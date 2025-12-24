@@ -5,10 +5,11 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Shipment } from '../../entities/shipment.entity';
 import { ShipmentDetail } from '../../entities/shipment-detail.entity';
 import { TrackingLog } from '../../entities/tracking-log.entity';
+import { BlockchainModule } from '../blockchain/blockchain.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Shipment, ShipmentDetail, TrackingLog])],
+  imports: [TypeOrmModule.forFeature([Shipment, ShipmentDetail, TrackingLog]), BlockchainModule],
   controllers: [ShipmentsController],
   providers: [ShipmentsService],
 })
-export class ShipmentsModule {}
+export class ShipmentsModule { }

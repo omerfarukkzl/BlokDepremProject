@@ -1,6 +1,6 @@
 # Story 3.4: Record Shipment Status On-Chain
 
-Status: review
+Status: done
 
 ## Story
 
@@ -91,6 +91,15 @@ N/A
 - Added comprehensive unit tests (9 tests) covering all acceptance criteria
 - All 77 backend tests pass with no regressions
 
+**Code Review Fixes Applied (2025-12-25):**
+- **H1**: Added `@HttpCode(HttpStatus.ACCEPTED)` (202 status) to controller endpoints per Epic AC requirement
+- **M2/M3**: Fixed location logic to use actual location names from `Location` entity instead of hardcoded `location_{id}` format
+- **M4**: Enhanced test coverage with 4 new tests (13 total tests now):
+  - Verify blockchain calls use actual location names
+  - Verify fallback to `location_{id}` when location name unavailable
+  - Verify transaction hash updates from 'pending' to actual hash
+  - All tests pass (13/13)
+
 ### File List
 
 - `backend/src/modules/shipments/shipments.module.ts` (modified)
@@ -100,4 +109,5 @@ N/A
 ## Change Log
 
 - 2025-12-24: Implemented blockchain integration for shipment status recording (Story 3.4)
+- 2025-12-25: Code review fixes applied - Added HTTP 202 status codes, fixed location logic to use actual names, enhanced test coverage (4 new tests)
 

@@ -32,9 +32,8 @@ export class PredictionsService {
             throw new BadRequestException('Predicted quantities are required');
         }
         // Allow officialId = 0 for testing, just log warning
-        if (!officialId && officialId !== 0) {
-            this.logger.warn(`No officialId provided, using default 0`);
-            officialId = 0;
+        if (!officialId) {
+            throw new BadRequestException('Official ID is required');
         }
         if (typeof confidence !== 'number' || confidence < 0 || confidence > 1) {
             this.logger.warn(`Invalid confidence ${confidence}, clamping to valid range`);
@@ -48,7 +47,7 @@ export class PredictionsService {
             predicted_quantities: predictedQuantities,
             confidence,
             prediction_hash: hash,
-            created_by_official_id: officialId || null,
+            created_by_official_id: officialId,
         });
 
         const saved = await this.predictionRepository.save(prediction);
