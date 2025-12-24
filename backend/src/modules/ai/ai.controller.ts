@@ -17,11 +17,6 @@ export class AiController {
   @Post('predict')
   @UseGuards(AuthGuard('jwt'))
   async getPrediction(@Body() predictionDto: PredictionDto): Promise<any> {
-    const result = await this.aiService.getPrediction(predictionDto);
-    return {
-      success: true,
-      data: result,
-      timestamp: new Date().toISOString(),
-    };
+    return this.aiService.getPrediction(predictionDto);
   }
 }

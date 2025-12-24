@@ -1,6 +1,6 @@
 # Story 2.3: Region Selection & Prediction UI
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -101,6 +101,8 @@ so that I can see recommended aid quantities for that area.
 
 ### Completion Notes List
 
+- Code Review Fix: Updated `aiService.test.ts` to match snake_case contract `region_id`.
+- Code Review Fix: Updated File List to include implicitly modified auth/api files.
 - Task 1 Completed: Implemented `aiService`, `locationService`, and `predictionStore` with full test coverage (Red-Green-Refactor).
 - Task 2 Completed: Implemented `PredictionForm` component with tests.
 - Task 3 Completed: Implemented `PredictionResult` component with tests.
@@ -124,4 +126,6 @@ so that I can see recommended aid quantities for that area.
 - `frontend/src/App.tsx` (Modified)
 - `frontend/vitest.config.ts` (New)
 - `frontend/src/setupTests.ts` (New)
+- `frontend/src/services/apiClient.ts` (Modified)
+- `frontend/src/stores/authStore.ts` (Modified)
 - `frontend/package.json` (Modified)

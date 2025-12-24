@@ -9,7 +9,8 @@ export interface PredictionResponse {
 
 const aiService = {
     getPrediction: async (regionId: string): Promise<PredictionResponse | undefined> => {
-        const response = await apiClient.post<PredictionResponse>('/ai/predict', { regionId });
+        // Send region_id as expected by backend DTO
+        const response = await apiClient.post<PredictionResponse>('/ai/predict', { region_id: regionId });
         return response.data;
     }
 };

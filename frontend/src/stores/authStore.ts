@@ -33,6 +33,8 @@ export const useAuthStore = create<AuthStore>()(
         try {
           const response = await authService.login(data);
 
+          localStorage.setItem('auth-token', response.token); // Sync for apiClient usage
+
           set({
             user: response.user,
             token: response.token,
@@ -50,6 +52,8 @@ export const useAuthStore = create<AuthStore>()(
         try {
           const response = await authService.register(data);
 
+          localStorage.setItem('auth-token', response.token); // Sync for apiClient usage
+
           set({
             user: response.user,
             token: response.token,
@@ -63,6 +67,7 @@ export const useAuthStore = create<AuthStore>()(
       },
 
       logout: () => {
+        localStorage.removeItem('auth-token'); // Clear sync
         set({
           user: null,
           token: null,

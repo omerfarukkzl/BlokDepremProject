@@ -41,7 +41,7 @@ class ApiClient {
     this.axios.interceptors.request.use(
       (config) => {
         // Add auth token if available
-        const token = localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
+        const token = useAuthStore.getState().token;
         if (token) {
           config.headers.Authorization = `Bearer ${token}`;
         }
@@ -85,7 +85,7 @@ class ApiClient {
 
           try {
             await this.refreshToken();
-            const token = localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
+            const token = useAuthStore.getState().token;
             if (token) {
               originalRequest.headers.Authorization = `Bearer ${token}`;
               return this.axios(originalRequest);
@@ -126,11 +126,16 @@ class ApiClient {
     try {
       const response = await axios.post(`${API_BASE_URL}/auth/refresh`, {}, {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN)}`,
+          Authorization: `Bearer ${useAuthStore.getState().token}`,
         },
       });
 
       const { token } = response.data.data;
+      // Update store directly 
+      useAuthStore.setState({ token });
+      // Also update localStorage to keep consistency with AuthStore persistence if needed, 
+      // but simpler is to let AuthStore handle persistence if it's set up that way.
+      // However, since we patched AuthStore to sync to this key, update it too.
       localStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, token);
     } catch (error) {
       throw new Error('Token refresh failed');

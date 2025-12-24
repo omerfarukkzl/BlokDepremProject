@@ -31,7 +31,7 @@ describe('aiService', () => {
 
             const result = await aiService.getPrediction(regionId);
 
-            expect(apiClient.post).toHaveBeenCalledWith('/ai/predict', { regionId });
+            expect(apiClient.post).toHaveBeenCalledWith('/ai/predict', { region_id: regionId });
             expect(result).toEqual(mockResponse.data);
         });
 
