@@ -4,10 +4,12 @@ import { Repository } from 'typeorm';
 import { PredictionsService } from './predictions.service';
 import { Prediction } from '../../entities/prediction.entity';
 import { createHash } from 'crypto';
+import { BlockchainService } from '../blockchain/blockchain.service';
 
 describe('PredictionsService', () => {
     let service: PredictionsService;
     let repository: jest.Mocked<Repository<Prediction>>;
+    let blockchainService: jest.Mocked<BlockchainService>;
 
     const mockPrediction: Partial<Prediction> = {
         id: 1,
@@ -31,6 +33,10 @@ describe('PredictionsService', () => {
             find: jest.fn(),
         };
 
+        const mockBlockchainService = {
+            addPredictionHash: jest.fn(),
+        };
+
         const module: TestingModule = await Test.createTestingModule({
             providers: [
                 PredictionsService,
@@ -38,11 +44,16 @@ describe('PredictionsService', () => {
                     provide: getRepositoryToken(Prediction),
                     useValue: mockRepository,
                 },
+                {
+                    provide: BlockchainService,
+                    useValue: mockBlockchainService,
+                },
             ],
         }).compile();
 
         service = module.get<PredictionsService>(PredictionsService);
         repository = module.get(getRepositoryToken(Prediction));
+        blockchainService = module.get(BlockchainService);
     });
 
     it('should be defined', () => {
@@ -56,9 +67,11 @@ describe('PredictionsService', () => {
             const confidence = 0.85;
             const officialId = 1;
             const predictionHash = 'provided-hash-123';
+            const expectedSavedEntity = { ...mockPrediction, prediction_hash: predictionHash };
 
-            repository.create.mockReturnValue(mockPrediction as Prediction);
-            repository.save.mockResolvedValue(mockPrediction as Prediction);
+            repository.create.mockReturnValue(expectedSavedEntity as Prediction);
+            repository.save.mockResolvedValue(expectedSavedEntity as Prediction);
+            blockchainService.addPredictionHash.mockResolvedValue('0xmocktransactionhash');
 
             const result = await service.createPrediction(
                 regionId,
@@ -76,7 +89,17 @@ describe('PredictionsService', () => {
                 created_by_official_id: officialId,
             });
             expect(repository.save).toHaveBeenCalled();
-            expect(result).toEqual(mockPrediction);
+            // result matches expectedSavedEntity (ignoring side-effect mutation timing for robustness)
+            expect(result).toMatchObject({
+                ...expectedSavedEntity,
+                // If the async operation runs fast enough, this might be set, or null.
+                // We mainly care that it returns the entity we saved.
+                prediction_hash: predictionHash,
+            });
+
+            // Verify async blockchain call - need to wait a tick since it's fire-and-forget
+            await new Promise(resolve => setTimeout(resolve, 0));
+            expect(blockchainService.addPredictionHash).toHaveBeenCalledWith(regionId, predictionHash);
         });
 
         it('should generate hash when not provided', async () => {
@@ -108,6 +131,25 @@ describe('PredictionsService', () => {
             );
             expect(result.prediction_hash).toBeDefined();
             expect(result.prediction_hash).toHaveLength(64); // SHA-256 hex length
+        });
+
+        it('should log error but not fail when blockchain recording fails', async () => {
+            const regionId = 'ankara';
+            const predictedQuantities = { tent: 50 };
+
+            repository.create.mockReturnValue(mockPrediction as Prediction);
+            repository.save.mockResolvedValue(mockPrediction as Prediction);
+            blockchainService.addPredictionHash.mockRejectedValue(new Error('Blockchain unavailable'));
+
+            await expect(service.createPrediction(
+                regionId,
+                predictedQuantities,
+                0.9,
+                1
+            )).resolves.not.toThrow();
+
+            // Verify error was handled gracefully (test passes if no exception thrown)
+            expect(repository.save).toHaveBeenCalled();
         });
     });
 

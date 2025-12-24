@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Prediction } from '../../entities/prediction.entity';
 import { createHash } from 'crypto';
+import { BlockchainService } from '../blockchain/blockchain.service';
 
 @Injectable()
 export class PredictionsService {
@@ -11,6 +12,7 @@ export class PredictionsService {
     constructor(
         @InjectRepository(Prediction)
         private readonly predictionRepository: Repository<Prediction>,
+        private readonly blockchainService: BlockchainService,
     ) { }
 
     async createPrediction(
@@ -51,6 +53,12 @@ export class PredictionsService {
 
         const saved = await this.predictionRepository.save(prediction);
         this.logger.log(`Prediction saved: ${saved.id} with hash ${saved.prediction_hash}`);
+
+        // Non-blocking blockchain recording (Fire and forget with error logging)
+        this.recordHashOnChain(saved).catch(err => {
+            this.logger.error(`Failed to record hash on-chain for prediction ${saved.id}: ${err.message}`);
+        });
+
         return saved;
     }
 
@@ -83,5 +91,18 @@ export class PredictionsService {
         return this.predictionRepository.find({
             order: { created_at: 'DESC' },
         });
+    }
+
+    private async recordHashOnChain(prediction: Prediction): Promise<void> {
+        this.logger.debug(`Initiating blockchain recording for prediction ${prediction.id}`);
+        try {
+            const txHash = await this.blockchainService.addPredictionHash(prediction.region_id, prediction.prediction_hash);
+            prediction.blockchain_tx_hash = txHash;
+            await this.predictionRepository.save(prediction);
+            this.logger.log(`Blockchain transaction recorded for prediction ${prediction.id}: ${txHash}`);
+        } catch (error) {
+            // Rethrow to be caught by the caller's .catch() block for logging
+            throw error;
+        }
     }
 }

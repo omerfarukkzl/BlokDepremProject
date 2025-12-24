@@ -11,6 +11,7 @@ import { AiModule } from './modules/ai/ai.module';
 import { LocationsModule } from './modules/locations/locations.module';
 import { AidItemsModule } from './modules/aid-items/aid-items.module';
 import { PredictionsModule } from './modules/predictions/predictions.module';
+import { BlockchainModule } from './modules/blockchain/blockchain.module';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { PredictionsModule } from './modules/predictions/predictions.module';
     ShipmentsModule,
     TrackingModule,
     AiModule,
+    BlockchainModule,
     LocationsModule,
     AidItemsModule,
     PredictionsModule,
