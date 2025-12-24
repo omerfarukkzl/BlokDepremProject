@@ -2,10 +2,10 @@ import { Module } from '@nestjs/common';
 import { AiController } from './ai.controller';
 import { AiService } from './ai.service';
 import { HttpModule } from '@nestjs/axios';
-import { TypeOrmModule } from '@nestjs/typeorm';
+import { PredictionsModule } from '../predictions/predictions.module';
 
 @Module({
-  imports: [HttpModule, TypeOrmModule.forFeature([])],
+  imports: [HttpModule, PredictionsModule],
   controllers: [AiController],
   providers: [AiService],
 })

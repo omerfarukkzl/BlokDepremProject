@@ -1,8 +1,11 @@
 import React from 'react';
-import { usePredictionStore } from '../../../stores/predictionStore';
+import { usePredictionStore, useActiveQuantities } from '../../../stores/predictionStore';
+import ConfidenceIndicator from './ConfidenceIndicator';
+import QuantityAdjuster from './QuantityAdjuster';
 
 const PredictionResult: React.FC = () => {
-    const { prediction, isLoading, error } = usePredictionStore();
+    const { prediction, isLoading, error, adjustedQuantities, setAdjustedQuantity, resetToOriginal } = usePredictionStore();
+    const activeQuantities = useActiveQuantities();
 
     if (isLoading) {
         return (
@@ -24,25 +27,50 @@ const PredictionResult: React.FC = () => {
         return null;
     }
 
+    const hasAdjustments = adjustedQuantities !== null;
+
     return (
         <div className="mt-6 bg-white shadow rounded-lg p-6">
             <h3 className="text-lg font-medium text-gray-900 mb-4">Predicted Aid Requirements</h3>
 
-            <div className="mb-4 flex items-center">
-                <span className="text-sm text-gray-500 mr-2">Confidence Score:</span>
-                <span className={`text-sm font-bold ${prediction.confidence > 0.8 ? 'text-green-600' : 'text-yellow-600'}`}>
-                    {(prediction.confidence * 100).toFixed(0)}%
-                </span>
+            {/* Confidence Score Display with Visual Indicator */}
+            <div className="mb-6">
+                <ConfidenceIndicator confidence={prediction.confidence} size="md" />
             </div>
 
+            {/* Editable Quantity Grid */}
             <div className="grid grid-cols-2 gap-4">
-                {Object.entries(prediction.predictions).map(([key, value]) => (
-                    <div key={key} className="bg-gray-50 p-4 rounded-md">
-                        <dt className="text-sm font-medium text-gray-500 capitalize">{key}</dt>
-                        <dd className="mt-1 text-2xl font-semibold text-gray-900">{value}</dd>
-                    </div>
+                {Object.entries(prediction.predictions).map(([key, originalValue]) => (
+                    <QuantityAdjuster
+                        key={key}
+                        aidType={key}
+                        originalValue={originalValue}
+                        adjustedValue={adjustedQuantities?.[key]}
+                        onChange={(value) => setAdjustedQuantity(key, value)}
+                    />
                 ))}
             </div>
+
+            {/* Reset to Original Button */}
+            {hasAdjustments && (
+                <button
+                    onClick={resetToOriginal}
+                    className="mt-4 text-sm text-indigo-600 hover:text-indigo-800 underline"
+                >
+                    Reset to Original Predictions
+                </button>
+            )}
+
+            {/* Create Shipment Button (Story 4.1 Prep) */}
+            {activeQuantities && (
+                <button
+                    disabled
+                    className="mt-6 w-full py-2 px-4 rounded-md text-white bg-gray-400 cursor-not-allowed"
+                    title="Coming in Story 4.1"
+                >
+                    Create Shipment (Coming Soon)
+                </button>
+            )}
         </div>
     );
 };

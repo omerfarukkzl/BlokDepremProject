@@ -10,6 +10,7 @@ import { TrackingModule } from './modules/tracking/tracking.module';
 import { AiModule } from './modules/ai/ai.module';
 import { LocationsModule } from './modules/locations/locations.module';
 import { AidItemsModule } from './modules/aid-items/aid-items.module';
+import { PredictionsModule } from './modules/predictions/predictions.module';
 
 @Module({
   imports: [
@@ -33,6 +34,7 @@ import { AidItemsModule } from './modules/aid-items/aid-items.module';
     AiModule,
     LocationsModule,
     AidItemsModule,
+    PredictionsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
