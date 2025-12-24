@@ -7,7 +7,7 @@ import { AxiosError } from 'axios';
 @Injectable()
 export class AiService {
   private readonly logger = new Logger(AiService.name);
-  private readonly aiServiceUrl = process.env.AI_SERVICE_URL || 'http://localhost:5001';
+  private readonly aiServiceUrl = process.env.AI_SERVICE_URL || 'http://localhost:8000';
 
   constructor(private readonly httpService: HttpService) { }
 

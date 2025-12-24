@@ -21,7 +21,8 @@ export class PredictionDto {
     moderately_damaged?: number;
 
     @IsNumber()
-    population: number;
+    @IsOptional()
+    population?: number;
 
     @IsNumber()
     @IsOptional()

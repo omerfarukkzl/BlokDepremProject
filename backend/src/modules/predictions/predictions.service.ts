@@ -20,18 +20,23 @@ export class PredictionsService {
         officialId: number,
         predictionHash?: string,
     ): Promise<Prediction> {
-        // Input validation
+        this.logger.debug(`Creating prediction: regionId=${regionId}, officialId=${officialId}, confidence=${confidence}`);
+
+        // Input validation - more lenient for prototype
         if (!regionId || regionId.trim() === '') {
             throw new BadRequestException('Region ID is required');
         }
         if (!predictedQuantities || Object.keys(predictedQuantities).length === 0) {
             throw new BadRequestException('Predicted quantities are required');
         }
-        if (!officialId || officialId <= 0) {
-            throw new BadRequestException('Valid official ID is required');
+        // Allow officialId = 0 for testing, just log warning
+        if (!officialId && officialId !== 0) {
+            this.logger.warn(`No officialId provided, using default 0`);
+            officialId = 0;
         }
-        if (confidence < 0 || confidence > 1) {
-            throw new BadRequestException('Confidence must be between 0 and 1');
+        if (typeof confidence !== 'number' || confidence < 0 || confidence > 1) {
+            this.logger.warn(`Invalid confidence ${confidence}, clamping to valid range`);
+            confidence = Math.max(0, Math.min(1, confidence || 0.5));
         }
 
         const hash = predictionHash || this.generateHash(predictedQuantities, regionId);
@@ -41,7 +46,7 @@ export class PredictionsService {
             predicted_quantities: predictedQuantities,
             confidence,
             prediction_hash: hash,
-            created_by_official_id: officialId,
+            created_by_official_id: officialId || null,
         });
 
         const saved = await this.predictionRepository.save(prediction);

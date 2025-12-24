@@ -31,20 +31,20 @@ export class Prediction {
     @Column()
     prediction_hash: string;
 
-    @Column({ nullable: true })
+    @Column({ type: 'varchar', nullable: true })
     blockchain_tx_hash: string | null;
 
     @Column({ type: 'decimal', precision: 5, scale: 2, nullable: true })
     accuracy: number | null;
 
-    @Column()
-    created_by_official_id: number;
+    @Column({ type: 'int', nullable: true })
+    created_by_official_id: number | null;
 
-    @ManyToOne(() => Official)
+    @ManyToOne(() => Official, { nullable: true })
     @JoinColumn({ name: 'created_by_official_id' })
-    official: Official;
+    official: Official | null;
 
-    @Column({ nullable: true })
+    @Column({ type: 'int', nullable: true })
     shipment_id: number | null;
     // Will be linked in Story 4.1
 
