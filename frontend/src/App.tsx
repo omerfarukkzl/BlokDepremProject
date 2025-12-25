@@ -15,6 +15,7 @@ import RegisterPage from './pages/public/RegisterPage/RegisterPage';
 import NeedsPage from './pages/public/NeedsPage/NeedsPage';
 import TrackPage from './pages/public/TrackPage/TrackPage';
 import PredictionsPage from './pages/official/PredictionsPage/PredictionsPage';
+import ShipmentDetailsPage from './pages/official/ShipmentDetailsPage/ShipmentDetailsPage';
 
 // Protected Routes
 import ProtectedRoute from './components/auth/ProtectedRoute/ProtectedRoute';
@@ -51,6 +52,7 @@ function AppRoutes() {
             <ProtectedRoute requiredRole="official">
               <Routes>
                 <Route path="predictions" element={<PredictionsPage />} />
+                <Route path="shipments/:id" element={<ShipmentDetailsPage />} />
                 <Route path="*" element={<Navigate to="predictions" replace />} />
               </Routes>
             </ProtectedRoute>

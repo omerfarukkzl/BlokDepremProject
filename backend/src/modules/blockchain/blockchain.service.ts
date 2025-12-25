@@ -1,7 +1,16 @@
 import { Injectable, OnModuleInit, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { ethers } from 'ethers';
 import BlokDepremAbi from './contracts/BlokDeprem.abi.json';
+import { TrackingLog } from '../../entities/tracking-log.entity';
+import { Shipment } from '../../entities/shipment.entity';
+import {
+    BlockchainHistoryResponseDto,
+    BlockchainLogDto,
+    VerificationStatus,
+} from './dto/blockchain-history.dto';
 
 @Injectable()
 export class BlockchainService implements OnModuleInit {
@@ -11,7 +20,13 @@ export class BlockchainService implements OnModuleInit {
     private contract: ethers.Contract;
     private isConnected = false;
 
-    constructor(private configService: ConfigService) { }
+    constructor(
+        private configService: ConfigService,
+        @InjectRepository(TrackingLog)
+        private readonly trackingLogRepository: Repository<TrackingLog>,
+        @InjectRepository(Shipment)
+        private readonly shipmentRepository: Repository<Shipment>,
+    ) { }
 
     async onModuleInit() {
         this.logger.log('Initializing BlockchainService...');
@@ -95,5 +110,96 @@ export class BlockchainService implements OnModuleInit {
                 throw error;
             }
         }
+    }
+
+    /**
+     * Retrieves shipment history from the blockchain and verifies against database records.
+     * @param barcode - The shipment barcode to query
+     * @returns BlockchainHistoryResponseDto with history and verification status
+     */
+    async getShipmentHistory(barcode: string): Promise<BlockchainHistoryResponseDto> {
+        this.ensureConnection();
+
+        // Call the smart contract to get blockchain history
+        const blockchainLogs = await this.contract.getShipmentHistory(barcode);
+
+        // Map blockchain data to DTO format
+        // The contract returns an array of Log structs: { status, timestamp, location }
+        const blockchainHistory: BlockchainLogDto[] = blockchainLogs.map((log: { status: string; timestamp: bigint; location: string }) => ({
+            status: log.status,
+            timestamp: Number(log.timestamp), // Convert BigInt to number
+            location: log.location,
+        }));
+
+        // Get database records for verification
+        const shipment = await this.shipmentRepository.findOne({
+            where: { barcode },
+        });
+
+        let databaseRecordCount = 0;
+        let verificationStatus: VerificationStatus;
+
+        if (shipment) {
+            const dbLogs = await this.trackingLogRepository.find({
+                where: { shipment_id: shipment.id },
+                order: { timestamp: 'ASC' },
+            });
+            databaseRecordCount = dbLogs.length;
+
+            // Determine verification status
+            // Determine verification status
+            if (blockchainHistory.length === 0 && databaseRecordCount === 0) {
+                verificationStatus = VerificationStatus.MATCH;
+            } else if (blockchainHistory.length === 0) {
+                verificationStatus = VerificationStatus.NO_BLOCKCHAIN_RECORDS;
+            } else if (databaseRecordCount === 0) {
+                verificationStatus = VerificationStatus.NO_DB_RECORDS;
+            } else if (blockchainHistory.length === databaseRecordCount) {
+                // Same count - strictly verify content alignment
+                let isMatch = true;
+                const TIMESTAMP_TOLERANCE_MS = 60 * 60 * 1000; // 1 hour tolerance due to block time vs server time differences
+
+                for (let i = 0; i < blockchainHistory.length; i++) {
+                    const bcLog = blockchainHistory[i];
+                    const dbLog = dbLogs[i];
+
+                    // 1. Verify Status
+                    if (bcLog.status !== dbLog.status) {
+                        this.logger.warn(`Verification Mismatch: Status at index ${i} differs. BC: ${bcLog.status}, DB: ${dbLog.status}`);
+                        isMatch = false;
+                        break;
+                    }
+
+                    // 2. Verify Timestamp (Blockchain uses seconds, DB uses MS)
+                    const bcTimeMs = bcLog.timestamp * 1000;
+                    const dbTimeMs = dbLog.timestamp.getTime();
+                    const diff = Math.abs(bcTimeMs - dbTimeMs);
+
+                    if (diff > TIMESTAMP_TOLERANCE_MS) {
+                        this.logger.warn(`Verification Mismatch: Timestamp at index ${i} differs by ${diff}ms. BC: ${bcTimeMs}, DB: ${dbTimeMs}`);
+                        // We strictly require alignment as per AC, but loose tolerance allows for async processing time
+                        isMatch = false;
+                        break;
+                    }
+                }
+                verificationStatus = isMatch ? VerificationStatus.MATCH : VerificationStatus.MISMATCH;
+            } else {
+                // Different counts - partial match at best
+                verificationStatus = VerificationStatus.PARTIAL;
+            }
+        } else {
+            // No shipment found in DB
+            verificationStatus = blockchainHistory.length > 0
+                ? VerificationStatus.NO_DB_RECORDS
+                : VerificationStatus.MATCH;
+        }
+
+        return {
+            barcode,
+            blockchainRecordCount: blockchainHistory.length,
+            databaseRecordCount,
+            verificationStatus,
+            blockchainHistory,
+        };
     }
 }

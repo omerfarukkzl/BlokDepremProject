@@ -7,6 +7,6 @@ export class UpdateShipmentStatusDto {
 
   @IsString()
   @IsNotEmpty()
-  @IsIn(['InTransit', 'Delivered'])
+  @IsIn(['Departed', 'Arrived', 'Delivered'])
   status: string;
 }

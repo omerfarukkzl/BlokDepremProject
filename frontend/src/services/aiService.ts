@@ -5,6 +5,7 @@ export interface PredictionResponse {
     confidence: number;
     prediction_hash: string;
     region_id: string;
+    predictionId: number;
 }
 
 const aiService = {
@@ -16,3 +17,4 @@ const aiService = {
 };
 
 export default aiService;
+

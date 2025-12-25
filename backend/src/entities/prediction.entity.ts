@@ -4,10 +4,12 @@ import {
     Column,
     CreateDateColumn,
     ManyToOne,
+    OneToOne,
     JoinColumn,
     Index,
 } from 'typeorm';
 import { Official } from './official.entity';
+import { Shipment } from './shipment.entity';
 
 @Entity('predictions')
 export class Prediction {
@@ -46,7 +48,10 @@ export class Prediction {
 
     @Column({ type: 'int', nullable: true })
     shipment_id: number | null;
-    // Will be linked in Story 4.1
+
+    @OneToOne(() => Shipment, (shipment) => shipment.prediction, { nullable: true })
+    @JoinColumn({ name: 'shipment_id' })
+    shipment: Shipment | null;
 
     @CreateDateColumn()
     created_at: Date;

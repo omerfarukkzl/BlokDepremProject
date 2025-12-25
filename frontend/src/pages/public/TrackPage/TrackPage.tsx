@@ -7,6 +7,7 @@ import {
   CheckCircleIcon,
   ExclamationTriangleIcon,
   ClockIcon,
+  ShieldCheckIcon,
 } from '@heroicons/react/24/outline';
 import {
   Button,
@@ -24,6 +25,7 @@ import {
 } from '../../../components';
 import { Container } from '../../../components/layout';
 import { useNotification } from '../../../components';
+import { BlockchainVerificationLink } from '../../../components/features/tracking';
 import trackingService from '../../../services/trackingService';
 import { cn } from '../../../utils/cn';
 
@@ -113,7 +115,9 @@ const TrackPage: React.FC = () => {
           status: event.status.toLowerCase(),
           location: event.location || `${event.status} - Kayıt`,
           timestamp: event.timestamp,
-          notes: event.notes || `Durum güncellendi: ${event.status}`
+          notes: event.notes || `Durum güncellendi: ${event.status}`,
+          isOnBlockchain: event.isOnBlockchain || false,
+          blockchainTxHash: event.blockchainTxHash,
         })),
         createdAt: trackingHistory.shipment.createdAt,
         estimatedDelivery: trackingHistory.shipment.estimatedDeliveryDate || (() => {
@@ -140,7 +144,7 @@ const TrackPage: React.FC = () => {
       showSuccess('Kargo bulundu', `${barcode} numaralı kargo detayları yüklendi.`);
     } catch (error: any) {
       console.error('Error tracking shipment:', error);
-      
+
       // Handle specific error cases
       if (error.message?.includes('not found') || error.message?.includes('404')) {
         setError('Bu barkoda ait kargo bulunamadı. Lütfen barkodu kontrol edip tekrar deneyin.');
@@ -293,6 +297,38 @@ const TrackPage: React.FC = () => {
                   </div>
                 </div>
 
+                {/* Barcode Section */}
+                <div className="mt-6 p-4 bg-gray-50 rounded-lg">
+                  <h4 className="font-medium text-gray-900 mb-3">Barkod</h4>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-4">
+                      <img
+                        src={`${import.meta.env.VITE_API_BASE_URL}/shipments/${shipmentData.id}/barcode`}
+                        alt={`Barkod: ${shipmentData.barcode}`}
+                        className="h-16 bg-white p-2 rounded border"
+                        onError={(e) => {
+                          // Hide image on error
+                          (e.target as HTMLImageElement).style.display = 'none';
+                        }}
+                      />
+                      <div>
+                        <span className="font-mono text-lg font-semibold text-gray-900">
+                          {shipmentData.barcode}
+                        </span>
+                        <p className="text-sm text-gray-500">Takip barkodu</p>
+                      </div>
+                    </div>
+                    <a
+                      href={`${import.meta.env.VITE_API_BASE_URL}/shipments/${shipmentData.id}/barcode`}
+                      download={`barcode-${shipmentData.barcode}.png`}
+                      className="inline-flex items-center px-4 py-2 text-sm font-medium text-indigo-600 bg-indigo-50 rounded-lg hover:bg-indigo-100 transition-colors"
+                    >
+                      <QrCodeIcon className="h-4 w-4 mr-2" />
+                      Barkodu İndir
+                    </a>
+                  </div>
+                </div>
+
                 {/* Items */}
                 <div className="mt-6">
                   <h4 className="font-medium text-gray-900 mb-3">Gönderi İçeriği</h4>
@@ -333,8 +369,8 @@ const TrackPage: React.FC = () => {
                           log.status === 'delivered'
                             ? 'bg-green-100 border-green-500'
                             : log.status === 'in_transit'
-                            ? 'bg-yellow-100 border-yellow-500'
-                            : 'bg-blue-100 border-blue-500'
+                              ? 'bg-yellow-100 border-yellow-500'
+                              : 'bg-blue-100 border-blue-500'
                         )}>
                           {getStatusInfo(log.status).icon}
                         </div>
@@ -343,11 +379,24 @@ const TrackPage: React.FC = () => {
                         <div className="ml-6 flex-1">
                           <div className="flex items-start justify-between">
                             <div>
-                              <h4 className="font-medium text-gray-900">
+                              <h4 className="font-medium text-gray-900 flex items-center">
                                 {getStatusInfo(log.status).label}
+                                {log.isOnBlockchain && (
+                                  <ShieldCheckIcon
+                                    className="w-4 h-4 ml-2 text-green-500"
+                                    aria-label="Blockchain ile doğrulandı"
+                                    title="Bu kayıt blockchain üzerinde doğrulandı"
+                                  />
+                                )}
                               </h4>
                               <p className="text-sm text-gray-600">{log.location}</p>
                               <p className="text-sm text-gray-500 mt-1">{log.notes}</p>
+                              {/* Blockchain Verification Link */}
+                              {log.isOnBlockchain && log.blockchainTxHash && (
+                                <div className="mt-2">
+                                  <BlockchainVerificationLink txHash={log.blockchainTxHash} />
+                                </div>
+                              )}
                             </div>
                             <span className="text-sm text-gray-500">
                               {formatDate(log.timestamp)}
