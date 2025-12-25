@@ -4,6 +4,7 @@ import { ShipmentsService } from './shipments.service';
 import { CreateShipmentDto } from './dto/create-shipment.dto';
 import { CreateShipmentFromPredictionDto } from './dto/create-shipment-from-prediction.dto';
 import { UpdateShipmentStatusDto } from './dto/update-shipment-status.dto';
+import { ConfirmDeliveryDto } from './dto/confirm-delivery.dto';
 import { AuthGuard } from '@nestjs/passport';
 
 @Controller('shipments')
@@ -57,5 +58,21 @@ export class ShipmentsController {
     res.setHeader('Content-Type', 'image/png');
     res.setHeader('Content-Disposition', `inline; filename="barcode-${id}.png"`);
     res.send(imageBuffer);
+  }
+
+  @Post(':id/delivery')
+  @HttpCode(HttpStatus.ACCEPTED) // 202: Async blockchain recording in progress
+  @UseGuards(AuthGuard('jwt'))
+  async confirmDelivery(
+    @Param('id') id: string,
+    @Body() confirmDeliveryDto: ConfirmDeliveryDto,
+    @Req() req,
+  ) {
+    const userId = req.user.userId;
+    return this.shipmentsService.confirmDelivery(
+      parseInt(id),
+      confirmDeliveryDto.actual_quantities,
+      userId,
+    );
   }
 }

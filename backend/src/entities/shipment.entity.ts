@@ -44,6 +44,13 @@ export class Shipment {
   @JoinColumn({ name: 'created_by_official_id' })
   official: Official;
 
+  @Column({ type: 'int', nullable: true })
+  delivered_by_official_id: number | null;
+
+  @ManyToOne(() => Official, { nullable: true })
+  @JoinColumn({ name: 'delivered_by_official_id' })
+  deliveredByOfficial: Official | null;
+
   @OneToOne(() => Prediction, (prediction) => prediction.shipment, { nullable: true })
   prediction: Prediction | null;
 }
