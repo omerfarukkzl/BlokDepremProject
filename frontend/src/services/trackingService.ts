@@ -36,6 +36,8 @@ export interface Shipment {
     address: string;
     city: string;
     region: string;
+    latitude?: number;
+    longitude?: number;
   };
   destinationLocationId: string;
   destinationLocation: {
@@ -44,6 +46,8 @@ export interface Shipment {
     address: string;
     city: string;
     region: string;
+    latitude?: number;
+    longitude?: number;
   };
   status: 'registered' | 'in_transit' | 'delivered' | 'cancelled';
   priority: 'low' | 'medium' | 'high' | 'critical';
@@ -103,6 +107,8 @@ interface BackendShipment {
     address: string;
     city: string;
     region: string;
+    latitude?: number;
+    longitude?: number;
   };
   destinationLocation?: {
     id: number;
@@ -110,6 +116,8 @@ interface BackendShipment {
     address: string;
     city: string;
     region: string;
+    latitude?: number;
+    longitude?: number;
   };
   official?: {
     id: number;
@@ -209,6 +217,8 @@ class TrackingService {
         address: backendShipment.sourceLocation.address,
         city: backendShipment.sourceLocation.city,
         region: backendShipment.sourceLocation.region,
+        latitude: backendShipment.sourceLocation.latitude,
+        longitude: backendShipment.sourceLocation.longitude,
       } : {
         id: '',
         name: 'Bilinmeyen',
@@ -223,6 +233,8 @@ class TrackingService {
         address: backendShipment.destinationLocation.address,
         city: backendShipment.destinationLocation.city,
         region: backendShipment.destinationLocation.region,
+        latitude: backendShipment.destinationLocation.latitude,
+        longitude: backendShipment.destinationLocation.longitude,
       } : {
         id: '',
         name: 'Bilinmeyen',
@@ -296,18 +308,19 @@ class TrackingService {
     const normalizedBarcode = barcode.toUpperCase().trim();
 
     // Strict format validation: BD-YYYY-XXXXX
-    // BD = fixed prefix, YYYY = 4-digit year, XXXXX = 5-digit sequence
-    const barcodeRegex = /^BD-\d{4}-\d{5}$/;
+    // BD = fixed prefix, YYYY = 4-digit year, XXXXX = 5-character alphanumeric sequence
+    // Allowing alphanumeric characters (A-Z, 0-9) for the random part
+    const barcodeRegex = /^BD-\d{4}-[A-Z0-9]{5}$/;
 
     if (!barcodeRegex.test(normalizedBarcode)) {
       return {
         isValid: false,
-        error: 'Geçersiz barkod formatı. Beklenen format: BD-YYYY-XXXXX (örn: BD-2025-00001)',
+        error: 'Geçersiz barkod formatı. Beklenen format: BD-YYYY-XXXXX (örn: BD-2025-A1B2C)',
       };
     }
 
     // Additional validation: Year should be reasonable (2020-2099)
-    const yearMatch = normalizedBarcode.match(/^BD-(\d{4})-\d{5}$/);
+    const yearMatch = normalizedBarcode.match(/^BD-(\d{4})-[A-Z0-9]{5}$/);
     if (yearMatch) {
       const year = parseInt(yearMatch[1], 10);
       if (year < 2020 || year > 2099) {
@@ -326,7 +339,7 @@ class TrackingService {
    */
   generateTrackingUrl(barcode: string): string {
     const baseUrl = window.location.origin;
-    return `${baseUrl}/track/${encodeURIComponent(barcode)}`;
+    return `${baseUrl}/track?barcode=${encodeURIComponent(barcode)}`;
   }
 
   /**
@@ -399,6 +412,7 @@ class TrackingService {
       label: priority,
       color: 'gray',
       description: 'Unknown priority',
+      icon: 'question-mark-circle',
     };
   }
 

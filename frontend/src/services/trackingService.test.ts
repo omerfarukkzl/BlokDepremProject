@@ -1,3 +1,4 @@
+import { describe, it, expect } from 'vitest';
 import trackingService from './trackingService';
 
 describe('TrackingService', () => {
@@ -59,6 +60,12 @@ describe('TrackingService', () => {
             expect(trackingService.validateBarcode('BD-2020-00001').isValid).toBe(true);
             expect(trackingService.validateBarcode('BD-2024-12345').isValid).toBe(true);
             expect(trackingService.validateBarcode('BD-2099-99999').isValid).toBe(true);
+        });
+
+        it('should accept alphanumeric barcodes', () => {
+            const result = trackingService.validateBarcode('BD-2025-NOA7E');
+            expect(result.isValid).toBe(true);
+            expect(result.error).toBeUndefined();
         });
 
         it('should trim whitespace from barcode', () => {

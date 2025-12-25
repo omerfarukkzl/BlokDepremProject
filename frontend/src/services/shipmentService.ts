@@ -32,10 +32,18 @@ export interface CreateShipmentFromPredictionRequest {
 
 class ShipmentService {
     async createFromPrediction(data: CreateShipmentFromPredictionRequest): Promise<ShipmentResponse> {
-        const response = await apiClient.post<ShipmentResponse>('/shipments/from-prediction', data);
+        const response = await apiClient.post<any>('/shipments/from-prediction', data) as any;
+
+        // Handle wrapped response (standard)
         if (response.success && response.data) {
             return response.data;
         }
+
+        // Handle direct response (unwrapped entity return)
+        if (response.id && response.barcode) {
+            return response as any as ShipmentResponse;
+        }
+
         throw new Error(response.error || 'Failed to create shipment');
     }
 

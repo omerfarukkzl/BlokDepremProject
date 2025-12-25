@@ -7,7 +7,6 @@ import {
   CheckCircleIcon,
   ExclamationTriangleIcon,
   ClockIcon,
-  ShieldCheckIcon,
 } from '@heroicons/react/24/outline';
 import {
   Button,
@@ -17,7 +16,6 @@ import {
   CardHeader,
   CardTitle,
   Input,
-  LoadingSpinner,
   EmptyState,
   Alert,
   Badge,
@@ -25,9 +23,8 @@ import {
 } from '../../../components';
 import { Container } from '../../../components/layout';
 import { useNotification } from '../../../components';
-import { BlockchainVerificationLink } from '../../../components/features/tracking';
+import { TrackingTimeline, RouteDisplay } from '../../../components/features/tracking';
 import trackingService from '../../../services/trackingService';
-import { cn } from '../../../utils/cn';
 
 
 const TrackPage: React.FC = () => {
@@ -112,6 +109,8 @@ const TrackPage: React.FC = () => {
         barcode: trackingHistory.shipment.barcode,
         origin: `${trackingHistory.shipment.originLocation?.name || 'Bilinmeyen'} ${trackingHistory.shipment.originLocation?.address || ''}`.trim(),
         destination: `${trackingHistory.shipment.destinationLocation?.name || 'Bilinmeyen'} ${trackingHistory.shipment.destinationLocation?.address || ''}`.trim(),
+        originLocation: trackingHistory.shipment.originLocation,
+        destinationLocation: trackingHistory.shipment.destinationLocation,
         status: trackingHistory.shipment.status.toLowerCase(),
         description: `Gönderi #${trackingHistory.shipment.barcode}`,
         items: trackingHistory.shipment.items?.map((item) => ({
@@ -268,18 +267,12 @@ const TrackPage: React.FC = () => {
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <h4 className="font-medium text-gray-900 mb-2">Rota Bilgileri</h4>
-                    <div className="space-y-2 text-sm">
-                      <div className="flex justify-between">
-                        <span className="text-gray-500">Kalkış:</span>
-                        <span className="font-medium">{shipmentData.origin}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-500">Varış:</span>
-                        <span className="font-medium">{shipmentData.destination}</span>
-                      </div>
-                    </div>
+                  <div className="col-span-1 md:col-span-2 mb-4">
+                    <RouteDisplay
+                      origin={shipmentData.originLocation}
+                      destination={shipmentData.destinationLocation}
+                      status={shipmentData.status}
+                    />
                   </div>
                   <div>
                     <h4 className="font-medium text-gray-900 mb-2">Zaman Bilgileri</h4>
@@ -364,58 +357,7 @@ const TrackPage: React.FC = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="relative">
-                  {/* Timeline Line */}
-                  <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-gray-200"></div>
-
-                  {/* Timeline Items */}
-                  <div className="space-y-6">
-                    {shipmentData.trackingLogs.map((log: any, index: number) => (
-                      <div key={log.id} className="relative flex items-start">
-                        {/* Timeline Dot */}
-                        <div className={cn(
-                          'relative z-10 flex items-center justify-center w-8 h-8 rounded-full border-2',
-                          log.status === 'delivered'
-                            ? 'bg-green-100 border-green-500'
-                            : log.status === 'in_transit'
-                              ? 'bg-yellow-100 border-yellow-500'
-                              : 'bg-blue-100 border-blue-500'
-                        )}>
-                          {getStatusInfo(log.status).icon}
-                        </div>
-
-                        {/* Content */}
-                        <div className="ml-6 flex-1">
-                          <div className="flex items-start justify-between">
-                            <div>
-                              <h4 className="font-medium text-gray-900 flex items-center">
-                                {getStatusInfo(log.status).label}
-                                {log.isOnBlockchain && (
-                                  <ShieldCheckIcon
-                                    className="w-4 h-4 ml-2 text-green-500"
-                                    aria-label="Blockchain ile doğrulandı"
-                                    title="Bu kayıt blockchain üzerinde doğrulandı"
-                                  />
-                                )}
-                              </h4>
-                              <p className="text-sm text-gray-600">{log.location}</p>
-                              <p className="text-sm text-gray-500 mt-1">{log.notes}</p>
-                              {/* Blockchain Verification Link */}
-                              {log.isOnBlockchain && log.blockchainTxHash && (
-                                <div className="mt-2">
-                                  <BlockchainVerificationLink txHash={log.blockchainTxHash} />
-                                </div>
-                              )}
-                            </div>
-                            <span className="text-sm text-gray-500">
-                              {formatDate(log.timestamp)}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+                <TrackingTimeline events={shipmentData.trackingLogs} />
               </CardContent>
             </Card>
           </>

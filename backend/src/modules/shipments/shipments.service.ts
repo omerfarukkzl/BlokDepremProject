@@ -280,6 +280,11 @@ export class ShipmentsService {
       if (currentStatus !== 'Arrived') {
         throw new BadRequestException(`Invalid status transition from ${currentStatus} to Delivered. Must be Arrived.`);
       }
+    } else if (status === 'Cancelled') {
+      if (currentStatus === 'Delivered') {
+        throw new BadRequestException(`Cannot cancel a shipment that has already been delivered.`);
+      }
+      // Allow transition to Cancelled from Created, Registered, Departed, Arrived
     } else {
       // For any other status (e.g., trying to set back to Created/Registered/InTransit) - block it unless logic allows
       // Assuming loop-back is NOT allowed for this linear workflow
@@ -374,6 +379,8 @@ export class ShipmentsService {
         address: string;
         city: string;
         region: string;
+        latitude?: number;
+        longitude?: number;
       };
       destinationLocation?: {
         id: number;
@@ -381,6 +388,8 @@ export class ShipmentsService {
         address: string;
         city: string;
         region: string;
+        latitude?: number;
+        longitude?: number;
       };
       official?: {
         id: number;
@@ -435,6 +444,21 @@ export class ShipmentsService {
       order: { timestamp: 'DESC' },
     });
 
+    // Helper function to determine location based on status
+    const getLocationForStatus = (status: string): string | undefined => {
+      const normalizedStatus = status.toLowerCase();
+      // Departed/Registered/Created -> Source Location
+      if (['departed', 'registered', 'created'].includes(normalizedStatus)) {
+        return shipment.sourceLocation?.name;
+      }
+      // Arrived/Delivered -> Destination Location
+      if (['arrived', 'delivered'].includes(normalizedStatus)) {
+        return shipment.destinationLocation?.name;
+      }
+      // In Transit -> Could be either, return undefined
+      return undefined;
+    };
+
     // Transform to expected response format
     // Note: Location entity has only name, latitude, longitude (no address/city/region)
     // TrackingLog entity has only id, shipment_id, status, transaction_hash, timestamp
@@ -454,6 +478,8 @@ export class ShipmentsService {
           address: '', // Location entity doesn't have address
           city: '',    // Location entity doesn't have city
           region: '',  // Location entity doesn't have region
+          latitude: shipment.sourceLocation.latitude,
+          longitude: shipment.sourceLocation.longitude,
         } : undefined,
         destinationLocation: shipment.destinationLocation ? {
           id: shipment.destinationLocation.id,
@@ -461,6 +487,8 @@ export class ShipmentsService {
           address: '', // Location entity doesn't have address
           city: '',    // Location entity doesn't have city
           region: '',  // Location entity doesn't have region
+          latitude: shipment.destinationLocation.latitude,
+          longitude: shipment.destinationLocation.longitude,
         } : undefined,
         official: shipment.official ? {
           id: shipment.official.id,
@@ -481,7 +509,7 @@ export class ShipmentsService {
         id: log.id,
         shipment_id: log.shipment_id,
         status: log.status,
-        location: undefined, // TrackingLog entity doesn't have location field
+        location: getLocationForStatus(log.status), // Infer location from status
         timestamp: log.timestamp,
         notes: undefined,    // TrackingLog entity doesn't have notes field
         recorded_by: undefined, // TrackingLog entity doesn't have recorded_by field

@@ -1,5 +1,7 @@
+
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 import PredictionResult from './PredictionResult';
 import { usePredictionStore, useActiveQuantities } from '../../../stores/predictionStore';
 
@@ -16,6 +18,8 @@ describe('PredictionResult', () => {
         vi.clearAllMocks();
     });
 
+
+
     it('renders loading state', () => {
         (usePredictionStore as any).mockReturnValue({
             isLoading: true,
@@ -27,7 +31,11 @@ describe('PredictionResult', () => {
         });
         (useActiveQuantities as any).mockReturnValue(null);
 
-        render(<PredictionResult />);
+        render(
+            <MemoryRouter>
+                <PredictionResult />
+            </MemoryRouter>
+        );
         expect(screen.getByText(/loading/i)).toBeInTheDocument();
     });
 
@@ -43,7 +51,11 @@ describe('PredictionResult', () => {
         });
         (useActiveQuantities as any).mockReturnValue(null);
 
-        render(<PredictionResult />);
+        render(
+            <MemoryRouter>
+                <PredictionResult />
+            </MemoryRouter>
+        );
         expect(screen.getByText(errorMsg)).toBeInTheDocument();
     });
 
@@ -70,7 +82,11 @@ describe('PredictionResult', () => {
         });
         (useActiveQuantities as any).mockReturnValue(prediction.predictions);
 
-        render(<PredictionResult />);
+        render(
+            <MemoryRouter>
+                <PredictionResult />
+            </MemoryRouter>
+        );
 
         // Check QuantityAdjuster components render for each aid type
         expect(screen.getByLabelText('Adjust Tent quantity')).toBeInTheDocument();
@@ -94,7 +110,11 @@ describe('PredictionResult', () => {
         });
         (useActiveQuantities as any).mockReturnValue(null);
 
-        const { container } = render(<PredictionResult />);
+        const { container } = render(
+            <MemoryRouter>
+                <PredictionResult />
+            </MemoryRouter>
+        );
         expect(container).toBeEmptyDOMElement();
     });
 
@@ -116,7 +136,11 @@ describe('PredictionResult', () => {
         });
         (useActiveQuantities as any).mockReturnValue({ tent: 150 });
 
-        render(<PredictionResult />);
+        render(
+            <MemoryRouter>
+                <PredictionResult />
+            </MemoryRouter>
+        );
 
         expect(screen.getByText('Reset to Original Predictions')).toBeInTheDocument();
     });
@@ -139,7 +163,11 @@ describe('PredictionResult', () => {
         });
         (useActiveQuantities as any).mockReturnValue(prediction.predictions);
 
-        render(<PredictionResult />);
+        render(
+            <MemoryRouter>
+                <PredictionResult />
+            </MemoryRouter>
+        );
 
         expect(screen.queryByText('Reset to Original Predictions')).not.toBeInTheDocument();
     });
@@ -162,13 +190,17 @@ describe('PredictionResult', () => {
         });
         (useActiveQuantities as any).mockReturnValue({ tent: 150 });
 
-        render(<PredictionResult />);
+        render(
+            <MemoryRouter>
+                <PredictionResult />
+            </MemoryRouter>
+        );
 
         fireEvent.click(screen.getByText('Reset to Original Predictions'));
         expect(mockResetToOriginal).toHaveBeenCalled();
     });
 
-    it('renders disabled Create Shipment button', () => {
+    it('renders enabled Create Shipment button', () => {
         const prediction = {
             predictions: { tent: 100 },
             confidence: 0.9,
@@ -186,10 +218,14 @@ describe('PredictionResult', () => {
         });
         (useActiveQuantities as any).mockReturnValue(prediction.predictions);
 
-        render(<PredictionResult />);
+        render(
+            <MemoryRouter>
+                <PredictionResult />
+            </MemoryRouter>
+        );
 
-        const createButton = screen.getByText('Create Shipment (Coming Soon)');
+        const createButton = screen.getByText('Create Shipment');
         expect(createButton).toBeInTheDocument();
-        expect(createButton).toBeDisabled();
+        expect(createButton).not.toBeDisabled();
     });
 });

@@ -34,7 +34,7 @@ export class AiController {
         predictionDto.region_id,
         response.data.predictions,
         response.data.confidence,
-        req.user.id, // Official ID from JWT
+        req.user.userId, // Official ID from JWT (userId from JwtStrategy.validate)
         response.data.prediction_hash,
       );
 

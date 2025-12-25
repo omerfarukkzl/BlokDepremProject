@@ -29,14 +29,44 @@ const PredictionResult: React.FC = () => {
     const handleCreateShipment = async () => {
         if (!prediction || !sourceLocationId) return;
 
+        // Validate predictionId exists
+        if (!prediction.predictionId) {
+            setShipmentError('Prediction ID is missing. Please regenerate the prediction.');
+            return;
+        }
+
         setIsCreatingShipment(true);
         setShipmentError(null);
 
         try {
-            // Destination is the prediction region (need to find location by name or use a mapping)
-            // For now, use the region_id as destination (assuming it maps to a location)
-            const destinationLocation = locations.find(l => l.name.toLowerCase().includes(prediction.region_id.toLowerCase()));
-            const destinationLocationId = destinationLocation?.id || sourceLocationId;
+            // region_id from prediction is the location ID as a string
+            // First try to find by ID match, then by name match as fallback
+            const regionIdAsNumber = parseInt(prediction.region_id, 10);
+            let destinationLocationId: number;
+
+            if (!isNaN(regionIdAsNumber)) {
+                // region_id is a numeric ID - find matching location
+                const destinationLocation = locations.find(l => l.id === regionIdAsNumber);
+                destinationLocationId = destinationLocation?.id || regionIdAsNumber;
+            } else {
+                // region_id is a name - search by name
+                const destinationLocation = locations.find(l =>
+                    l.name.toLowerCase().includes(prediction.region_id.toLowerCase())
+                );
+                if (!destinationLocation) {
+                    setShipmentError(`Destination location "${prediction.region_id}" not found. Please select manually.`);
+                    setIsCreatingShipment(false);
+                    return;
+                }
+                destinationLocationId = destinationLocation.id;
+            }
+
+            // Validate source and destination are different
+            if (sourceLocationId === destinationLocationId) {
+                setShipmentError('Source and destination locations cannot be the same.');
+                setIsCreatingShipment(false);
+                return;
+            }
 
             const shipment = await shipmentService.createFromPrediction({
                 prediction_id: prediction.predictionId,
@@ -51,7 +81,7 @@ const PredictionResult: React.FC = () => {
             // Reset after success and redirect
             setTimeout(() => {
                 setShipmentSuccess(null);
-                navigate(`/track/${shipment.barcode}`);
+                navigate(`/track?barcode=${shipment.barcode}`);
             }, 2000);
         } catch (err: any) {
             setShipmentError(err.message || 'Failed to create shipment');

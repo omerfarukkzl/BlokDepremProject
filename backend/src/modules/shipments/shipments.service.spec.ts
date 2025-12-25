@@ -765,6 +765,24 @@ describe('ShipmentsService', () => {
       expect(result.history).toHaveLength(2);
     });
 
+    it('should return location coordinates when available', async () => {
+      const mockShipmentWithCoords = {
+        ...mockShipment,
+        sourceLocation: { id: 1, name: 'Istanbul Warehouse', latitude: 41.0082, longitude: 28.9784 },
+        destinationLocation: { id: 2, name: 'Ankara Distribution Center', latitude: 39.9334, longitude: 32.8597 },
+      } as unknown as Shipment;
+
+      mockQueryBuilder.getOne.mockResolvedValue(mockShipmentWithCoords);
+      trackingLogRepository.find.mockResolvedValue(mockTrackingLogs);
+
+      const result = await service.trackShipmentByBarcode('BD-2025-ABC12');
+
+      expect(result.shipment.sourceLocation).toHaveProperty('latitude', 41.0082);
+      expect(result.shipment.sourceLocation).toHaveProperty('longitude', 28.9784);
+      expect(result.shipment.destinationLocation).toHaveProperty('latitude', 39.9334);
+      expect(result.shipment.destinationLocation).toHaveProperty('longitude', 32.8597);
+    });
+
     it('should throw NotFoundException when shipment not found', async () => {
       mockQueryBuilder.getOne.mockResolvedValue(null);
 
@@ -822,14 +840,14 @@ describe('ShipmentsService', () => {
           shipment_id: 1,
           item_id: 101,
           quantity: 50,
-          item: { id: 101, name: 'Tent', category: 'shelter', unit: 'adet' },
+          item: { id: 101, name: 'Tent', category: 'shelter' },
         },
         {
           id: 2,
           shipment_id: 1,
           item_id: 102,
           quantity: 100,
-          item: { id: 102, name: 'Blanket', category: 'shelter', unit: 'adet' },
+          item: { id: 102, name: 'Blanket', category: 'shelter' },
         },
       ];
 
@@ -843,12 +861,12 @@ describe('ShipmentsService', () => {
       expect(result.shipment.items?.[0]).toEqual({
         id: 1,
         quantity: 50,
-        aidItem: { id: 101, name: 'Tent', category: 'shelter', unit: 'adet' },
+        aidItem: { id: 101, name: 'Tent', category: 'shelter' },
       });
       expect(result.shipment.items?.[1]).toEqual({
         id: 2,
         quantity: 100,
-        aidItem: { id: 102, name: 'Blanket', category: 'shelter', unit: 'adet' },
+        aidItem: { id: 102, name: 'Blanket', category: 'shelter' },
       });
     });
   });
