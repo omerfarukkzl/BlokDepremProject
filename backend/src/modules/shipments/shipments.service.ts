@@ -7,6 +7,7 @@ import { ShipmentDetail } from '../../entities/shipment-detail.entity';
 import { TrackingLog } from '../../entities/tracking-log.entity';
 import { Prediction } from '../../entities/prediction.entity';
 import { AidItem } from '../../entities/aid-item.entity';
+import { Official } from '../../entities/official.entity';
 import { CreateShipmentDto } from './dto/create-shipment.dto';
 import { UpdateShipmentStatusDto } from './dto/update-shipment-status.dto';
 import { CreateShipmentFromPredictionDto } from './dto/create-shipment-from-prediction.dto';
@@ -27,6 +28,8 @@ export class ShipmentsService {
     private readonly predictionRepository: Repository<Prediction>,
     @InjectRepository(AidItem)
     private readonly aidItemRepository: Repository<AidItem>,
+    @InjectRepository(Official)
+    private readonly officialRepository: Repository<Official>,
     private readonly blockchainService: BlockchainService,
   ) { }
 
@@ -344,6 +347,316 @@ export class ShipmentsService {
       where: { id: shipmentId },
       relations: ['sourceLocation', 'destinationLocation', 'official', 'prediction'],
     });
+  }
+
+  /**
+   * Tracks a shipment by barcode (case-insensitive) and returns shipment details with history.
+   * Public endpoint - no authentication required.
+   * Returns data in format expected by frontend trackingService (snake_case for raw DB fields).
+   * 
+   * @param barcode - The shipment barcode to search for (case-insensitive)
+   * @returns Shipment details including items and tracking history
+   * @throws NotFoundException if shipment not found
+   */
+  async trackShipmentByBarcode(barcode: string): Promise<{
+    shipment: {
+      id: number;
+      barcode: string;
+      source_location_id: number | null;
+      destination_location_id: number;
+      created_by_official_id: number;
+      status: string;
+      created_at: Date;
+      updated_at: Date;
+      sourceLocation?: {
+        id: number;
+        name: string;
+        address: string;
+        city: string;
+        region: string;
+      };
+      destinationLocation?: {
+        id: number;
+        name: string;
+        address: string;
+        city: string;
+        region: string;
+      };
+      official?: {
+        id: number;
+        name: string;
+        wallet_address: string;
+      };
+      items?: Array<{
+        id: number;
+        quantity: number;
+        aidItem: {
+          id: number;
+          name: string;
+          category?: string;
+          unit?: string;
+        };
+      }>;
+    };
+    history: Array<{
+      id: number;
+      shipment_id: number;
+      status: string;
+      location?: string;
+      timestamp: Date;
+      notes?: string;
+      recorded_by?: number;
+      is_on_blockchain: boolean;
+      blockchain_tx_hash?: string;
+    }>;
+  }> {
+    // Case-insensitive barcode search
+    const shipment = await this.shipmentRepository
+      .createQueryBuilder('shipment')
+      .leftJoinAndSelect('shipment.sourceLocation', 'sourceLocation')
+      .leftJoinAndSelect('shipment.destinationLocation', 'destinationLocation')
+      .leftJoinAndSelect('shipment.official', 'official')
+      .where('LOWER(shipment.barcode) = LOWER(:barcode)', { barcode })
+      .getOne();
+
+    if (!shipment) {
+      throw new NotFoundException(`Shipment with barcode '${barcode}' not found`);
+    }
+
+    // Get shipment items with aid item details
+    const shipmentItems = await this.shipmentDetailRepository.find({
+      where: { shipment_id: shipment.id },
+      relations: ['item'],
+    });
+
+    // Get tracking history for shipment
+    const trackingLogs = await this.trackingLogRepository.find({
+      where: { shipment_id: shipment.id },
+      order: { timestamp: 'DESC' },
+    });
+
+    // Transform to expected response format
+    // Note: Location entity has only name, latitude, longitude (no address/city/region)
+    // TrackingLog entity has only id, shipment_id, status, transaction_hash, timestamp
+    return {
+      shipment: {
+        id: shipment.id,
+        barcode: shipment.barcode,
+        source_location_id: shipment.source_location_id,
+        destination_location_id: shipment.destination_location_id,
+        created_by_official_id: shipment.created_by_official_id,
+        status: shipment.status,
+        created_at: shipment.created_at,
+        updated_at: shipment.updated_at,
+        sourceLocation: shipment.sourceLocation ? {
+          id: shipment.sourceLocation.id,
+          name: shipment.sourceLocation.name,
+          address: '', // Location entity doesn't have address
+          city: '',    // Location entity doesn't have city
+          region: '',  // Location entity doesn't have region
+        } : undefined,
+        destinationLocation: shipment.destinationLocation ? {
+          id: shipment.destinationLocation.id,
+          name: shipment.destinationLocation.name,
+          address: '', // Location entity doesn't have address
+          city: '',    // Location entity doesn't have city
+          region: '',  // Location entity doesn't have region
+        } : undefined,
+        official: shipment.official ? {
+          id: shipment.official.id,
+          name: shipment.official.name,
+          wallet_address: shipment.official.wallet_address,
+        } : undefined,
+        items: shipmentItems.map(detail => ({
+          id: detail.id,
+          quantity: detail.quantity,
+          aidItem: {
+            id: detail.item?.id || 0,
+            name: detail.item?.name || 'Unknown',
+            category: detail.item?.category,
+          },
+        })),
+      },
+      history: trackingLogs.map(log => ({
+        id: log.id,
+        shipment_id: log.shipment_id,
+        status: log.status,
+        location: undefined, // TrackingLog entity doesn't have location field
+        timestamp: log.timestamp,
+        notes: undefined,    // TrackingLog entity doesn't have notes field
+        recorded_by: undefined, // TrackingLog entity doesn't have recorded_by field
+        is_on_blockchain: !!log.transaction_hash && log.transaction_hash !== 'pending' && log.transaction_hash !== 'failed',
+        blockchain_tx_hash: (log.transaction_hash && log.transaction_hash !== 'pending' && log.transaction_hash !== 'failed') ? log.transaction_hash : undefined,
+      })),
+    };
+  }
+
+  /**
+   * Calculates the overall prediction accuracy between predicted and actual quantities.
+   * Per-item accuracy: max(0, 100 - (|Actual - Predicted| / Predicted) * 100)
+   * Overall accuracy: Average of all per-item accuracies, rounded to 2 decimal places.
+   * Edge cases:
+   *   - If Predicted is 0 and Actual is 0 → 100% accuracy for that item
+   *   - If Predicted is 0 and Actual > 0 → 0% accuracy for that item
+   */
+  private calculatePredictionAccuracy(
+    predicted: Record<string, number>,
+    actual: Record<string, number>,
+  ): number {
+    // Union of all keys from both predicted and actual
+    const allKeys = new Set([
+      ...Object.keys(predicted),
+      ...Object.keys(actual)
+    ]);
+
+    if (allKeys.size === 0) {
+      return 100.0; // Both empty implies perfect match
+    }
+
+    let totalAccuracy = 0;
+    let itemCount = 0;
+
+    for (const key of allKeys) {
+      // Normalize key lookup (assuming keys might have case diffs, though we normalize actuals now)
+      // predicted keys come from DB jsonb, usually lowercase but good to be safe if 'Tent' vs 'tent'
+      // actual keys are normalized in confirmDelivery
+
+      // Need to find the key in predicted regardless of case if possible, or assume predicted is clean.
+      // For safety, let's lower case everything for lookup.
+      const predKey = Object.keys(predicted).find(k => k.toLowerCase() === key.toLowerCase());
+      const actKey = Object.keys(actual).find(k => k.toLowerCase() === key.toLowerCase());
+
+      const pred = predKey ? predicted[predKey] : 0;
+      const act = actKey ? actual[actKey] : 0;
+
+      let itemAccuracy: number;
+      if (pred === 0) {
+        // Edge case: If predicted is 0, accuracy is 100% only if actual is also 0
+        itemAccuracy = act === 0 ? 100 : 0;
+      } else {
+        // Standard formula: max(0, 100 - (|Actual - Predicted| / Predicted) * 100)
+        itemAccuracy = Math.max(0, 100 - (Math.abs(act - pred) / pred) * 100);
+      }
+
+      totalAccuracy += itemAccuracy;
+      itemCount++;
+    }
+
+    const overallAccuracy = itemCount > 0 ? totalAccuracy / itemCount : 100;
+    // Round to 2 decimal places (e.g., 87.50)
+    return Math.round(overallAccuracy * 100) / 100;
+  }
+
+  /**
+   * Confirms delivery of a shipment and records actual quantities received.
+   * - Validates shipment is in 'Arrived' state
+   * - Updates shipment status to 'Delivered'
+   * - Saves actual quantities to the linked Prediction entity
+   * - Triggers blockchain recording for 'Delivered' status
+   */
+  async confirmDelivery(
+    shipmentId: number,
+    actualQuantities: Record<string, number>,
+    userId: number,
+  ): Promise<Shipment> {
+    // Load shipment with relations
+    const shipment = await this.shipmentRepository.findOne({
+      where: { id: shipmentId },
+      relations: ['sourceLocation', 'destinationLocation', 'prediction'],
+    });
+
+    if (!shipment) {
+      throw new NotFoundException(`Shipment with ID ${shipmentId} not found`);
+    }
+
+    // Validate shipment is in 'Arrived' state (AC: #1, #2)
+    if (shipment.status !== 'Arrived') {
+      throw new BadRequestException(
+        `Cannot confirm delivery. Shipment must be in 'Arrived' state, but is currently '${shipment.status}'.`,
+      );
+    }
+
+    // Security Check: Verify official belongs to destination location
+    const official = await this.officialRepository.findOne({ where: { id: userId } });
+    if (!official) {
+      throw new NotFoundException(`Official with ID ${userId} not found`);
+    }
+
+    // Admins can confirm anywhere, but regular officials must be at the destination
+    if (official.role !== 'admin' && official.location_id !== shipment.destination_location_id) {
+      throw new ConflictException(
+        `Official is at location ${official.location_id} but shipment destination is ${shipment.destination_location_id}. Only officials at the destination can confirm delivery.`,
+      );
+    }
+
+    // Validate Actual Quantities Integrety (Aid Item Keys)
+    // Normalize actual quantities keys to lowercase
+    const normalizedActualQuantities: Record<string, number> = {};
+    for (const [key, value] of Object.entries(actualQuantities)) {
+      normalizedActualQuantities[key.toLowerCase()] = value;
+    }
+
+    // Validate Actual Quantities Integrety (Aid Item Keys)
+    const aidItems = await this.aidItemRepository.find();
+    const validItemNames = new Set(aidItems.map(item => item.name.toLowerCase()));
+
+    for (const key of Object.keys(normalizedActualQuantities)) {
+      if (!validItemNames.has(key)) {
+        this.logger.warn(`Invalid aid item key replaced or ignored: ${key}`);
+        // Option 1: Throw error (Strict) - chosen for data integrity
+        throw new BadRequestException(`Invalid aid item type: '${key}'. Allowed types: ${Array.from(validItemNames).join(', ')}`);
+      }
+    }
+
+    // Update shipment status to 'Delivered' (AC: #2) and record actor (Audit)
+    shipment.status = 'Delivered';
+    shipment.delivered_by_official_id = userId;
+    const updatedShipment = await this.shipmentRepository.save(shipment);
+
+    // Save actual quantities and calculate accuracy for the linked Prediction entity (AC: #1, #3, #4)
+    if (shipment.prediction) {
+      shipment.prediction.actual_quantities = normalizedActualQuantities;
+      // Calculate and persist overall accuracy (Story 4.5)
+      shipment.prediction.accuracy = this.calculatePredictionAccuracy(
+        shipment.prediction.predicted_quantities,
+        normalizedActualQuantities,
+      );
+      await this.predictionRepository.save(shipment.prediction);
+      this.logger.log(
+        `Actual quantities and accuracy (${shipment.prediction.accuracy}%) saved for prediction ${shipment.prediction.id}`,
+      );
+    } else {
+      this.logger.warn(`Shipment ${shipmentId} has no linked prediction, skipping actual quantities save`);
+    }
+
+    // Create tracking log with pending transaction hash
+    const trackingLog = this.trackingLogRepository.create({
+      shipment_id: shipment.id,
+      status: 'Delivered',
+      transaction_hash: 'pending',
+      timestamp: new Date(),
+    });
+    const savedTrackingLog = await this.trackingLogRepository.save(trackingLog);
+
+    // Determine location (Delivered uses destination location)
+    const locationName =
+      shipment.destinationLocation?.name || `location_${shipment.destination_location_id}`;
+
+    // Fire-and-forget blockchain recording (NFR10: non-blocking) (AC: #4)
+    this.blockchainService
+      .addShipmentLog(shipment.barcode, 'Delivered', locationName)
+      .then((txHash) => {
+        savedTrackingLog.transaction_hash = txHash;
+        this.trackingLogRepository.save(savedTrackingLog);
+        this.logger.log(`Blockchain recorded for ${shipment.barcode} delivery: ${txHash}`);
+      })
+      .catch(async (err) => {
+        this.logger.warn(`Blockchain recording failed for ${shipment.barcode}: ${err.message}`);
+        savedTrackingLog.transaction_hash = 'failed';
+        await this.trackingLogRepository.save(savedTrackingLog);
+      });
+
+    return updatedShipment;
   }
 }
 

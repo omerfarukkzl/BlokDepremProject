@@ -14,7 +14,7 @@ export const API_ENDPOINTS = {
   // Public endpoints
   PUBLIC: {
     NEEDS: '/needs',
-    TRACK: (barcode: string) => `/track/${barcode}`,
+    TRACK: (barcode: string) => `/shipments/public/track/${barcode}`,
     LOCATIONS: '/locations',
     AID_ITEMS: '/aid-items',
   },

@@ -116,6 +116,16 @@ interface BackendShipment {
     name: string;
     wallet_address: string;
   };
+  items?: Array<{
+    id: number;
+    quantity: number;
+    aidItem: {
+      id: number;
+      name: string;
+      category?: string;
+      unit?: string;
+    };
+  }>;
 }
 
 interface BackendTrackingResponse {
@@ -128,7 +138,7 @@ const toISOString = (date: string | Date | null | undefined): string => {
   if (!date) {
     return new Date().toISOString();
   }
-  
+
   try {
     const dateObj = typeof date === 'string' ? new Date(date) : date;
     if (isNaN(dateObj.getTime())) {
@@ -166,12 +176,12 @@ class TrackingService {
     // Handle both wrapped and unwrapped responses
     // The tracking endpoint returns data directly, but apiClient might wrap it
     let data: BackendTrackingResponse;
-    
+
     // Type guard: check if response is wrapped in ApiResponse format
     const isWrapped = (r: unknown): r is { success: boolean; data?: BackendTrackingResponse; error?: string } => {
       return typeof r === 'object' && r !== null && 'success' in r;
     };
-    
+
     if (isWrapped(response)) {
       // Wrapped response format: { success: true, data: { shipment, history } }
       if (!response.success || !response.data) {
@@ -238,7 +248,18 @@ class TrackingService {
       createdAt: toISOString(backendShipment.created_at),
       updatedAt: toISOString(backendShipment.updated_at),
       trackingEvents: [],
-      items: [], // Backend doesn't return items in tracking endpoint
+      items: (backendShipment.items || []).map(item => ({
+        id: item.id.toString(),
+        shipmentId: backendShipment.id.toString(),
+        aidItemId: item.aidItem.id.toString(),
+        aidItem: {
+          id: item.aidItem.id.toString(),
+          name: item.aidItem.name,
+          category: item.aidItem.category || 'other',
+          unit: item.aidItem.unit || 'adet',
+        },
+        quantity: item.quantity,
+      })),
     };
 
     // Adapt backend response to TrackingHistory interface
@@ -261,19 +282,40 @@ class TrackingService {
 
   /**
    * Validate barcode format
+   * Expected format: BD-YYYY-XXXXX (e.g., BD-2025-00001)
+   * - BD: Fixed prefix
+   * - YYYY: 4-digit year
+   * - XXXXX: 5-digit sequence number
    */
   validateBarcode(barcode: string): { isValid: boolean; error?: string } {
     if (!barcode) {
-      return { isValid: false, error: 'Barcode is required' };
+      return { isValid: false, error: 'Barkod gereklidir' };
     }
 
-    if (barcode.length < 8 || barcode.length > 50) {
-      return { isValid: false, error: 'Barcode must be between 8 and 50 characters' };
+    // Normalize to uppercase for case-insensitive matching
+    const normalizedBarcode = barcode.toUpperCase().trim();
+
+    // Strict format validation: BD-YYYY-XXXXX
+    // BD = fixed prefix, YYYY = 4-digit year, XXXXX = 5-digit sequence
+    const barcodeRegex = /^BD-\d{4}-\d{5}$/;
+
+    if (!barcodeRegex.test(normalizedBarcode)) {
+      return {
+        isValid: false,
+        error: 'Geçersiz barkod formatı. Beklenen format: BD-YYYY-XXXXX (örn: BD-2025-00001)',
+      };
     }
 
-    // Allow alphanumeric characters and some special characters
-    if (!/^[A-Za-z0-9\-_]+$/.test(barcode)) {
-      return { isValid: false, error: 'Barcode contains invalid characters' };
+    // Additional validation: Year should be reasonable (2020-2099)
+    const yearMatch = normalizedBarcode.match(/^BD-(\d{4})-\d{5}$/);
+    if (yearMatch) {
+      const year = parseInt(yearMatch[1], 10);
+      if (year < 2020 || year > 2099) {
+        return {
+          isValid: false,
+          error: 'Barkod yılı 2020-2099 arasında olmalıdır',
+        };
+      }
     }
 
     return { isValid: true };

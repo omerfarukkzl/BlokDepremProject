@@ -11,6 +11,16 @@ import { AuthGuard } from '@nestjs/passport';
 export class ShipmentsController {
   constructor(private readonly shipmentsService: ShipmentsService) { }
 
+  /**
+   * PUBLIC endpoint for tracking shipments by barcode.
+   * No authentication required - accessible to anyone with the barcode.
+   */
+  @Get('public/track/:barcode')
+  @HttpCode(HttpStatus.OK)
+  async trackByBarcode(@Param('barcode') barcode: string) {
+    return this.shipmentsService.trackShipmentByBarcode(barcode);
+  }
+
   @Post('create')
   @HttpCode(HttpStatus.ACCEPTED) // 202: Async blockchain recording in progress
   @UseGuards(AuthGuard('jwt'))

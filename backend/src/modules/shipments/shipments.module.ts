@@ -7,10 +7,11 @@ import { ShipmentDetail } from '../../entities/shipment-detail.entity';
 import { TrackingLog } from '../../entities/tracking-log.entity';
 import { Prediction } from '../../entities/prediction.entity';
 import { AidItem } from '../../entities/aid-item.entity';
+import { Official } from '../../entities/official.entity';
 import { BlockchainModule } from '../blockchain/blockchain.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Shipment, ShipmentDetail, TrackingLog, Prediction, AidItem]), BlockchainModule],
+  imports: [TypeOrmModule.forFeature([Shipment, ShipmentDetail, TrackingLog, Prediction, AidItem, Official]), BlockchainModule],
   controllers: [ShipmentsController],
   providers: [ShipmentsService],
 })

@@ -39,6 +39,14 @@ const TrackPage: React.FC = () => {
   const [shipmentData, setShipmentData] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
 
+  // Auto-search if barcode is present in URL
+  React.useEffect(() => {
+    const urlBarcode = searchParams.get('barcode');
+    if (urlBarcode) {
+      handleSearch(urlBarcode);
+    }
+  }, []);
+
   // Get status info
   const getStatusInfo = (status: string) => {
     switch (status) {
@@ -76,14 +84,15 @@ const TrackPage: React.FC = () => {
   };
 
   // Handle search
-  const handleSearch = async () => {
-    if (!barcode.trim()) {
+  const handleSearch = async (targetBarcode?: string) => {
+    const barcodeToSearch = targetBarcode || barcode;
+    if (!barcodeToSearch.trim()) {
       setError('Lütfen bir kargo barkodu girin');
       return;
     }
 
     // Validate barcode format
-    const validation = trackingService.validateBarcode(barcode);
+    const validation = trackingService.validateBarcode(barcodeToSearch);
     if (!validation.isValid) {
       setError(validation.error || 'Geçersiz barkod formatı');
       return;
@@ -95,7 +104,7 @@ const TrackPage: React.FC = () => {
 
     try {
       // Use trackingService to get tracking history with proper API client integration
-      const trackingHistory = await trackingService.getTrackingHistory(barcode);
+      const trackingHistory = await trackingService.getTrackingHistory(barcodeToSearch);
 
       // Transform the API response to match the frontend interface
       const transformedData = {
@@ -200,7 +209,7 @@ const TrackPage: React.FC = () => {
             <div className="flex space-x-3">
               <div className="flex-1">
                 <Input
-                  placeholder="Örn: BK-2024-001"
+                  placeholder="Örn: BD-2025-00001"
                   value={barcode}
                   onChange={(e) => setBarcode(e.target.value.toUpperCase())}
                   onKeyPress={handleKeyPress}
@@ -209,7 +218,7 @@ const TrackPage: React.FC = () => {
                 />
               </div>
               <Button
-                onClick={handleSearch}
+                onClick={() => handleSearch()}
                 disabled={loading || !barcode.trim()}
                 loading={loading}
                 leftIcon={<MagnifyingGlassIcon className="h-4 w-4" />}

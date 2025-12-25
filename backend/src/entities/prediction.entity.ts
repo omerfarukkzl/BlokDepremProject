@@ -36,7 +36,20 @@ export class Prediction {
     @Column({ type: 'varchar', nullable: true })
     blockchain_tx_hash: string | null;
 
-    @Column({ type: 'decimal', precision: 5, scale: 2, nullable: true })
+    @Column({
+        type: 'decimal',
+        precision: 5,
+        scale: 2,
+        nullable: true,
+        transformer: {
+            to(data: number): number {
+                return data;
+            },
+            from(data: string): number {
+                return parseFloat(data);
+            },
+        },
+    })
     accuracy: number | null;
 
     @Column({ type: 'int', nullable: true })
