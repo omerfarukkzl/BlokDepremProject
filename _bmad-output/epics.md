@@ -56,9 +56,8 @@ This document provides the complete epic and story breakdown for BlokDepremProje
 **Reporting & Analytics (FR25-FR29)**
 - FR25: Admins can view prediction accuracy reports
 - FR26: Admins can filter reports by date range, region, and aid category
-- FR27: Admins can export prediction vs. actual data
 - FR28: Admins can view aggregate accuracy metrics (average, best, worst)
-- FR29: Admins can access blockchain audit trail for compliance reporting
+
 
 ### Non-Functional Requirements
 
@@ -132,9 +131,7 @@ This document provides the complete epic and story breakdown for BlokDepremProje
 | FR24 | Epic 5 | Origin/destination display |
 | FR25 | Epic 6 | Prediction accuracy reports |
 | FR26 | Epic 6 | Report filtering |
-| FR27 | Epic 6 | Data export |
 | FR28 | Epic 6 | Aggregate accuracy metrics |
-| FR29 | Epic 6 | Blockchain audit trail export |
 
 ## Epic List
 
@@ -625,7 +622,7 @@ So that I know where my donation went.
 
 ## Epic 6: Admin Reports & Analytics
 
-Admins can view prediction accuracy reports, filter by date/region/category, export data, view aggregate metrics, and access blockchain audit trails for compliance.
+Admins can view prediction accuracy reports, filter by date/region/category, and view aggregate metrics.
 
 ### Story 6.1: Admin Reports Dashboard
 
@@ -673,21 +670,7 @@ So that I can analyze specific segments of data.
 
 ---
 
-### Story 6.4: Data Export
 
-As an **Admin**,
-I want to export prediction vs. actual data,
-So that I can perform offline analysis or share with stakeholders.
-
-**Acceptance Criteria:**
-
-**Given** I am viewing filtered or unfiltered data
-**When** I click "Export"
-**Then** the data is downloaded as CSV
-**And** the export includes all visible columns
-**And** the filename includes the current date
-
----
 
 ### Story 6.5: Aggregate Accuracy Metrics
 
@@ -705,17 +688,5 @@ So that I can quickly assess overall system performance.
 
 ---
 
-### Story 6.6: Blockchain Audit Trail Export
 
-As an **Admin**,
-I want to export blockchain-verified records,
-So that I can provide compliance reports to stakeholders.
-
-**Acceptance Criteria:**
-
-**Given** I am on the admin dashboard
-**When** I click "Export Blockchain Audit Trail"
-**Then** all blockchain transaction hashes with timestamps are exported
-**And** the export includes Etherscan Sepolia links for verification
-**And** prediction hashes and shipment logs are both included
 

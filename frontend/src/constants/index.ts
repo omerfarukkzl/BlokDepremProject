@@ -28,6 +28,9 @@ export const API_ENDPOINTS = {
     DISTRIBUTION_SUGGESTIONS: '/ai/distribution-suggestions',
     PREDICT: '/ai/predict',
   },
+  REPORTS: {
+    DASHBOARD_STATS: '/ai/reports/stats',
+  },
 } as const;
 
 // Storage Constants
@@ -58,6 +61,7 @@ export const ROUTES = {
   // Admin routes
   ADMIN: {
     DASHBOARD: '/admin/dashboard',
+    REPORTS: '/admin/reports',
     USERS: '/admin/users',
     LOCATIONS: '/admin/locations',
     SHIPMENTS: '/admin/shipments',

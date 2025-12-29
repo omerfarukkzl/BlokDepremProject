@@ -38,10 +38,26 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     );
   }
 
-  // Check role requirements
-  if (requiredRole && user?.role !== requiredRole) {
+  // Check role requirements - admin has access to all roles (hierarchical)
+  const hasRequiredRole = () => {
+    if (!requiredRole) return true;
+    if (!user?.role) return false;
+
+    // Admin can access everything
+    if (user.role === 'admin') return true;
+
+    // Official can access official and donor pages
+    if (user.role === 'official' && (requiredRole === 'official' || requiredRole === 'donor')) {
+      return true;
+    }
+
+    // Exact match for other cases
+    return user.role === requiredRole;
+  };
+
+  if (requiredRole && !hasRequiredRole()) {
     // Redirect based on user role
-    let redirectPath = ROUTES.HOME;
+    let redirectPath: string = ROUTES.HOME;
 
     if (user?.role === 'admin') {
       redirectPath = ROUTES.ADMIN.DASHBOARD;

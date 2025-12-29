@@ -84,14 +84,14 @@ development_status:
   5-2-barcode-search-functionality: done
   5-3-shipment-timeline-display: done
   5-4-origin-and-destination-display: done
-  epic-5-retrospective: optional
+  epic-5-retrospective: done
 
   # Epic 6: Admin Reports & Analytics
-  epic-6: backlog
-  6-1-admin-reports-dashboard: backlog
-  6-2-prediction-accuracy-reports: backlog
-  6-3-report-filtering: backlog
-  6-4-data-export: backlog
+  epic-6: in-progress
+  6-1-admin-reports-dashboard: done
+  6-2-prediction-accuracy-reports: done
+  6-3-report-filtering: review
+
   6-5-aggregate-accuracy-metrics: backlog
-  6-6-blockchain-audit-trail-export: backlog
+
   epic-6-retrospective: optional

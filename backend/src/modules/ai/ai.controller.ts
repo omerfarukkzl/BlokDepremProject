@@ -1,8 +1,12 @@
-import { Controller, Get, Post, Body, UseGuards, Request, HttpException, HttpStatus, Logger } from '@nestjs/common';
+import { Controller, Get, Post, Body, UseGuards, Request, HttpException, HttpStatus, Logger, Query } from '@nestjs/common';
 import { AiService } from './ai.service';
 import { AuthGuard } from '@nestjs/passport';
 import { PredictionDto } from './dto/prediction.dto';
+import { GetReportsStatsDto } from './dto/get-reports-stats.dto';
 import { PredictionsService } from '../predictions/predictions.service';
+import { Roles } from '../../common/decorators/roles.decorator';
+import { RolesGuard } from '../../common/guards/roles.guard';
+import { OfficialRole } from '../../entities/official.entity';
 
 
 @Controller('ai')
@@ -52,5 +56,22 @@ export class AiController {
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
+  }
+
+  /**
+   * Admin Reports Dashboard Statistics (Story 6.1 + 6.2 + 6.3)
+   * Returns real accuracy metrics from completed predictions.
+   * Supports filtering by date range, region, and category.
+   */
+  @Get('reports/stats')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(OfficialRole.ADMIN)
+  async getReportsStats(@Query() filterDto: GetReportsStatsDto): Promise<any> {
+    const metrics = await this.aiService.getAccuracyMetrics(filterDto);
+    return {
+      success: true,
+      data: metrics,
+      timestamp: new Date().toISOString(),
+    };
   }
 }

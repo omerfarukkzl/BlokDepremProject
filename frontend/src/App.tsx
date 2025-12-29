@@ -16,6 +16,7 @@ import NeedsPage from './pages/public/NeedsPage/NeedsPage';
 import TrackPage from './pages/public/TrackPage/TrackPage';
 import PredictionsPage from './pages/official/PredictionsPage/PredictionsPage';
 import ShipmentDetailsPage from './pages/official/ShipmentDetailsPage/ShipmentDetailsPage';
+import AdminReportsPage from './pages/admin/AdminReportsPage';
 
 // Protected Routes
 import ProtectedRoute from './components/auth/ProtectedRoute/ProtectedRoute';
@@ -64,12 +65,10 @@ function AppRoutes() {
           path="/admin/*"
           element={
             <ProtectedRoute requiredRole="admin">
-              <div className="container mx-auto py-8">
-                <div className="text-center">
-                  <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
-                  <p className="mt-2 text-gray-600">Admin dashboard coming soon...</p>
-                </div>
-              </div>
+              <Routes>
+                <Route path="reports" element={<AdminReportsPage />} />
+                <Route path="*" element={<Navigate to="reports" replace />} />
+              </Routes>
             </ProtectedRoute>
           }
         />
