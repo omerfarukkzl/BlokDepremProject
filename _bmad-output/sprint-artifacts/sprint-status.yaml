@@ -90,7 +90,7 @@ development_status:
   epic-6: in-progress
   6-1-admin-reports-dashboard: done
   6-2-prediction-accuracy-reports: done
-  6-3-report-filtering: review
+  6-3-report-filtering: done
 
   6-5-aggregate-accuracy-metrics: backlog
 
